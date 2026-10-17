@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: diario-virtual
+    runtime: python
+    plan: free
+    buildCommand: "true"
+    startCommand: python servidor.py
+    envVars:
+      # sync: false = o valor NAO fica no repositorio; voce preenche no painel do Render.
+      # As chaves de noticias aceitam varias chaves separadas por virgula (chave1,chave2): ao esgotar uma, usa a proxima.
+      - key: NEWSAPI_KEY
+        sync: false
+      - key: CURRENTS_API_KEY
+        sync: false
+      - key: GNEWS_KEY
+        sync: false
+      - key: NEWSDATA_KEY
+        sync: false
+      - key: THENEWSAPI_KEY
+        sync: false
+      # Nuvem (opcional). Use a chave PUBLICA (anon / publishable), nunca a service_role / secret.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false

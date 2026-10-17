@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<script>try{var _s=JSON.parse(localStorage.getItem("diario-virtual-v1")||"{}"),_t=_s.theme||"auto";if(_t==="auto")_t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=_t}catch(e){}</script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<title>O Diário Virtual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+  --paper:#eee;
+  --ink:#232323;
+  --ink-soft:#555;
+  --rule:#3a3a3a;
+  --hair:#b9b9b9;
+  --hl:#dcdcdc;
+  --panel:#e6e6e6;
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#16130e;--ink:#eadfca;--ink-soft:#a99f8c;--rule:#8a7f6b;--hair:#3b352b;--hl:#2a251c;--panel:#1f1b14;
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;line-height:1.5;
+}
+.sheet{max-width:1180px;margin:0 auto;padding:28px 28px 60px}
+
+/* Cabeçalho */
+.topline{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  font-size:.78rem;color:var(--ink-soft);border-bottom:1px solid var(--rule);padding-bottom:8px}
+.masthead{text-align:center;padding:14px 0 6px}
+.masthead h1{
+  font-weight:700;margin:0;
+  font-size:clamp(2.2rem,8vw,4.8rem);line-height:1.05;letter-spacing:-.03em
+}
+.rule-double{border-top:3px solid var(--rule);border-bottom:1px solid var(--rule);height:7px;margin:8px 0}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:6px 0;font-size:.82rem}
+.bar .status i{margin-right:6px}
+.btn{
+  font:inherit;font-size:.8rem;background:transparent;color:var(--ink);
+  border:1px solid var(--rule);padding:6px 12px;cursor:pointer;display:inline-flex;gap:8px;align-items:center
+}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn:focus-visible,input:focus-visible,.chip button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.spin i{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Painel de configuração */
+.config{display:none;border:1px solid var(--rule);padding:18px;margin:12px 0 4px;background:var(--panel)}
+.config.open{display:block}
+.config h3{margin:0 0 4px;font-size:1.05rem}
+.config p{margin:0 0 10px;font-size:.78rem;color:var(--ink-soft)}
+.addrow{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.addrow input{font:inherit;font-size:.82rem;padding:6px 8px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);flex:1;min-width:120px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;border:1px solid var(--rule);font-size:.8rem;background:var(--paper)}
+.chip span{padding:4px 8px;cursor:default}
+.chip.off{opacity:.5;text-decoration:line-through}
+.chip .tg{cursor:pointer}
+.chip button{font:inherit;border:0;border-left:1px solid var(--rule);background:transparent;padding:4px 7px;cursor:pointer;color:var(--ink)}
+.chip button:hover{background:var(--ink);color:var(--paper)}
+.keyrow input{flex:2}
+.keyrow label{flex:0 0 110px;align-self:center;font-size:.82rem;font-weight:bold}
+.keyrow .keyinfo{flex:1 1 100%;margin:0}
+.keyinfo{font-size:.78rem;color:var(--ink-soft);margin-top:2px}
+.config .wide{grid-column:1/-1;border-top:1px solid var(--hair);padding-top:14px}
+.config .foot{grid-column:1/-1;font-size:.78rem;color:var(--ink-soft);border-top:1px solid var(--hair);padding-top:10px}
+
+/* Seções */
+.section{margin-top:28px}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  border-top:3px solid var(--rule);border-bottom:1px solid var(--rule);padding:6px 0 5px}
+.section-head h2{font-weight:700;font-size:1.4rem;letter-spacing:-.01em;margin:0}
+.section-head small{color:var(--ink-soft);font-size:.74rem}
+.grid{display:grid;grid-template-columns:1.6fr 1fr;gap:0;margin-top:14px}
+.lead{padding-right:24px;border-right:1px solid var(--rule)}
+.lead h3{font-weight:700;font-size:clamp(1.5rem,3.2vw,2.3rem);line-height:1.15;letter-spacing:-.02em;margin:0 0 10px}
+.lead h3 a{color:inherit;text-decoration:none}
+.lead h3 a:hover{text-decoration:underline}
+.lead .dropcap{font-size:.95rem;color:var(--ink-soft);margin:0 0 10px}
+.byline{font-size:.74rem;color:var(--ink-soft);font-style:italic}
+.byline b{font-style:normal;color:var(--ink)}
+.rest{padding-left:24px;columns:1}
+.item{padding:0 0 12px;margin:0 0 12px;border-bottom:1px solid var(--hair)}
+.item:last-child{border-bottom:0;margin-bottom:0}
+.item h4{font-weight:700;font-size:1rem;line-height:1.3;margin:0 0 4px}
+.item h4 a{color:inherit;text-decoration:none}
+.item h4 a:hover{text-decoration:underline}
+.more{columns:3;column-gap:28px;column-rule:1px solid var(--hair);margin-top:16px;padding-top:14px;border-top:1px solid var(--hair)}
+.more .item{break-inside:avoid}
+
+.empty,.errbox{border:1px dashed var(--rule);padding:18px;margin-top:14px;font-size:.88rem;color:var(--ink-soft)}
+.errbox{color:var(--ink)}
+.skeleton{height:14px;background:var(--hl);margin:10px 0;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.45}}
+img{max-width:100%}
+.fig:empty,.thumb:empty{display:none}
+.fig{margin:0 0 12px}
+.fig img,.thumb img,.rd-fig img{display:block;width:100%;object-fit:cover;filter:grayscale(1) contrast(1.05);border:1px solid var(--rule)}
+.fig img{aspect-ratio:16/9}
+.fig:hover img,.thumb:hover img,.rd-fig:hover img{filter:none}
+.rest .item{display:grid;grid-template-columns:1fr;gap:12px;align-items:start}
+.rest .item.hasimg{grid-template-columns:1fr 104px}
+.thumb img{aspect-ratio:4/3}
+.reader{position:fixed;inset:0;background:var(--paper);overflow:auto;z-index:50}
+.reader[hidden]{display:none}
+.reader-bar{position:sticky;top:0;background:var(--paper);border-bottom:3px solid var(--rule);z-index:2}
+.reader-bar .in{max-width:760px;margin:0 auto;padding:10px 24px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.reader-sheet{max-width:760px;margin:0 auto;padding:22px 24px 70px}
+.reader-sheet a.btn{text-decoration:none}
+.rd-kicker{font-size:.78rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.reader h1{font-weight:700;font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.15;letter-spacing:-.02em;margin:0 0 14px}
+.rd-dek{font-size:1.08rem;color:var(--ink-soft);margin:0 0 16px;border-left:3px solid var(--rule);padding-left:12px}
+.rd-fig{margin:0 0 20px}
+.rd-fig img{aspect-ratio:16/9}
+.rd-text p{font-size:1.02rem;line-height:1.75;margin:0 0 1em}
+.rd-foot{border-top:1px solid var(--rule);margin-top:26px;padding-top:10px;font-size:.78rem;color:var(--ink-soft)}
+footer{margin-top:40px;border-top:3px solid var(--rule);padding-top:8px;font-size:.74rem;color:var(--ink-soft);text-align:center}
+
+@media(max-width:860px){
+  .grid{grid-template-columns:1fr}
+  .lead{padding-right:0;border-right:0;border-bottom:1px solid var(--rule);padding-bottom:14px;margin-bottom:14px}
+  .rest{padding-left:0}
+  .more{columns:2}
+  .tabpanel.on.cols2{grid-template-columns:1fr}
+}
+@media(max-width:560px){.more{columns:1}.sheet{padding:16px}}
+@media(prefers-reduced-motion:reduce){.spin i,.skeleton{animation:none}}
+
+/* Abas de configuração */
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--rule);margin:-4px 0 16px}
+.tab{font:inherit;font-size:.82rem;background:transparent;color:var(--ink);border:1px solid transparent;border-bottom:0;
+  padding:7px 12px;cursor:pointer;display:inline-flex;gap:7px;align-items:center;margin-bottom:-1px}
+.tab.on{border-color:var(--rule);background:var(--paper);font-weight:700}
+.tab:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.tabpanel{display:none}
+.tabpanel.on{display:block}
+.tabpanel.on.cols2{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.config .foot{margin-top:16px;font-size:.78rem;color:var(--ink-soft);border-top:1px solid var(--hair);padding-top:10px}
+.field{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:.82rem}
+.field label{flex:0 0 130px;font-weight:bold}
+.field select,.field input[type=number]{font:inherit;font-size:.82rem;padding:6px 8px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);flex:1;min-width:120px}
+.field input[type=range]{flex:1;min-width:120px;accent-color:var(--ink)}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:.82rem;margin:0 0 12px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.btn.on{background:var(--ink);color:var(--paper)}
+.mini{padding:3px 9px;font-size:.74rem}
+.section-head .tools{display:flex;align-items:baseline;gap:10px}
+/* Filtro por interesse */
+.focusbar{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;margin-top:6px;-webkit-overflow-scrolling:touch}
+.focusbar .btn{white-space:nowrap}
+/* Player de voz */
+.player{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--paper);border-top:3px solid var(--rule);
+  display:flex;align-items:center;gap:10px;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.player .pl-text{flex:1;min-width:0;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.speaking{padding-bottom:72px}
+/* Imagens no tema escuro */
+:root[data-theme="dark"] .fig img,:root[data-theme="dark"] .thumb img,:root[data-theme="dark"] .rd-fig img{filter:grayscale(1) contrast(1.05) brightness(.8)}
+:root[data-theme="dark"] .fig:hover img,:root[data-theme="dark"] .thumb:hover img,:root[data-theme="dark"] .rd-fig:hover img{filter:brightness(.92)}
+</style>
+</head>
+<body>
+<div class="sheet">
+  <div class="topline">
+    <span id="dateLine"></span>
+    <span id="editionLine"></span>
+  </div>
+
+  <header class="masthead"><h1>O Diário Virtual</h1></header>
+  <div class="rule-double"></div>
+
+  <div class="bar">
+    <div class="status" id="status"><i class="fa-regular fa-clock"></i>Carregando edição...</div>
+    <div class="btns">
+      <button class="btn" id="btnBrief" type="button"><i class="fa-solid fa-volume-high"></i>Ouvir resumo</button>
+      <button class="btn" id="btnTheme" type="button"><i class="fa-solid fa-moon"></i>Luz noturna</button>
+      <button class="btn" id="btnRefresh" type="button"><i class="fa-solid fa-rotate"></i>Atualizar agora</button>
+      <button class="btn" id="btnConfig" type="button" aria-expanded="false"><i class="fa-solid fa-gear"></i>Configurações</button>
+    </div>
+  </div>
+
+  <div class="errbox" id="fileWarn" hidden><i class="fa-solid fa-triangle-exclamation"></i> Você abriu este arquivo direto do disco, e o navegador bloqueia as buscas de notícias nesse modo. Rode <b>servidor.py</b> e acesse <b>http://localhost:8000</b>.</div>
+
+  <section class="config" id="config" aria-label="Configurações">
+    <div class="tabs" role="tablist" aria-label="Seções das configurações">
+      <button class="tab on" id="tabbtn-geral" role="tab" type="button" data-tab="geral" aria-selected="true" aria-controls="tab-geral"><i class="fa-solid fa-newspaper"></i>Interesses e veículos</button>
+      <button class="tab" id="tabbtn-chaves" role="tab" type="button" data-tab="chaves" aria-selected="false" aria-controls="tab-chaves"><i class="fa-solid fa-key"></i>Chaves de API</button>
+      <button class="tab" id="tabbtn-voz" role="tab" type="button" data-tab="voz" aria-selected="false" aria-controls="tab-voz"><i class="fa-solid fa-palette"></i>Voz e aparência</button>
+      <button class="tab" id="tabbtn-conta" role="tab" type="button" data-tab="conta" aria-selected="false" aria-controls="tab-conta"><i class="fa-solid fa-user"></i>Conta e nuvem</button>
+    </div>
+
+    <div class="tabpanel on cols2" id="tab-geral" role="tabpanel" aria-labelledby="tabbtn-geral">
+      <div>
+        <h3><i class="fa-solid fa-newspaper"></i> Interesses</h3>
+        <p>Cada interesse vira uma seção do jornal. Use a barra acima das matérias para ver um de cada vez.</p>
+        <div class="addrow">
+          <input id="topicInput" type="text" placeholder="Ex.: economia, inteligência artificial" aria-label="Novo interesse">
+          <button class="btn" id="addTopic" type="button"><i class="fa-solid fa-plus"></i>Adicionar</button>
+        </div>
+        <div class="chips" id="topicChips"></div>
+      </div>
+      <div>
+        <h3><i class="fa-solid fa-building-columns"></i> Veículos principais</h3>
+        <p>Clique no nome para ativar ou desativar. Sem nenhum ativo, a busca usa todas as fontes.</p>
+        <div class="addrow">
+          <input id="outName" type="text" placeholder="Nome (ex.: Valor)" aria-label="Nome do veículo">
+          <input id="outDomain" type="text" placeholder="Domínio (ex.: valor.globo.com)" aria-label="Domínio do veículo">
+          <button class="btn" id="addOutlet" type="button"><i class="fa-solid fa-plus"></i>Adicionar</button>
+        </div>
+        <div class="chips" id="outletChips"></div>
+      </div>
+    </div>
+
+    <div class="tabpanel" id="tab-chaves" role="tabpanel" aria-labelledby="tabbtn-chaves">
+      <h3><i class="fa-solid fa-key"></i> Chaves das APIs de notícias</h3>
+      <p>Opcional. Cadastre quantas chaves quiser em cada API: quando uma esgota a cota (ou é recusada), a próxima assume automaticamente. Se todas falharem, a busca recorre aos feeds dos veículos e ao Google Notícias. As chaves ficam neste navegador (ou no servidor, via variável de ambiente); só vão para a nuvem se você ativar isso na aba Conta e nuvem.</p>
+      <div id="keyList"></div>
+    </div>
+
+    <div class="tabpanel cols2" id="tab-voz" role="tabpanel" aria-labelledby="tabbtn-voz">
+      <div>
+        <h3><i class="fa-solid fa-moon"></i> Aparência</h3>
+        <p>O tema escuro usa tons quentes e pouco azul, mais confortável à noite. "Automático" segue o seu aparelho.</p>
+        <div class="seg" id="themeBtns">
+          <button class="btn" type="button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i>Automático</button>
+          <button class="btn" type="button" data-mode="light"><i class="fa-solid fa-sun"></i>Claro</button>
+          <button class="btn" type="button" data-mode="dark"><i class="fa-solid fa-moon"></i>Escuro (luz noturna)</button>
+        </div>
+      </div>
+      <div>
+        <h3><i class="fa-solid fa-volume-high"></i> Leitura em voz alta</h3>
+        <p>Usa as vozes do seu aparelho. Use "Ouvir resumo", o botão "Ouvir" de cada seção ou "Ouvir matéria" no modo leitura.</p>
+        <div class="field"><label for="voiceSel">Voz</label><select id="voiceSel"></select></div>
+        <div class="field"><label for="rateRange">Velocidade <span id="rateVal"></span></label><input id="rateRange" type="range" min="0.6" max="1.6" step="0.1" value="1"></div>
+        <div class="field"><label for="perTopic">Manchetes no resumo</label><input id="perTopic" type="number" min="1" max="10" value="3" aria-describedby="perTopicHelp"></div>
+        <div class="keyinfo" id="perTopicHelp">Quantidade de manchetes lidas por interesse no resumo.</div>
+        <div class="btns" style="margin-top:8px"><button class="btn" id="testVoice" type="button"><i class="fa-solid fa-play"></i>Testar voz</button></div>
+        <div class="keyinfo" id="voiceNote"></div>
+      </div>
+    </div>
+
+    <div class="tabpanel" id="tab-conta" role="tabpanel" aria-labelledby="tabbtn-conta">
+      <div id="accountBox"></div>
+    </div>
+
+    <div class="foot"><i class="fa-solid fa-circle-info"></i> As preferências ficam salvas neste navegador e, se você entrar na aba Conta e nuvem, também no Supabase. A edição é renovada automaticamente a cada 10 minutos.</div>
+  </section>
+
+  <nav class="focusbar" id="focusBar" aria-label="Filtrar por interesse"></nav>
+
+  <main id="paper"></main>
+
+  <div class="reader" id="reader" hidden role="dialog" aria-modal="true" aria-label="Leitura da matéria">
+    <div class="reader-bar"><div class="in">
+      <button class="btn" id="rdBack" type="button"><i class="fa-solid fa-arrow-left"></i>Voltar ao jornal</button>
+      <button class="btn" id="rdListen" type="button"><i class="fa-solid fa-volume-high"></i>Ouvir matéria</button>
+      <a class="btn" id="rdOrig" href="#" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i>Ler no site original</a>
+    </div></div>
+    <div class="reader-sheet" id="rdBody"></div>
+  </div>
+
+  <div class="player" id="player" hidden role="region" aria-label="Leitura em voz alta">
+    <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
+    <div class="pl-text" id="plText" aria-live="polite"></div>
+    <button class="btn" id="plPause" type="button" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button>
+    <button class="btn" id="plNext" type="button" aria-label="Próxima manchete"><i class="fa-solid fa-forward-step"></i></button>
+    <button class="btn" id="plStop" type="button" aria-label="Parar leitura"><i class="fa-solid fa-stop"></i></button>
+  </div>
+
+  <footer>Notícias reunidas por APIs de notícias (NewsAPI, Currents API, GNews, NewsData.io e The News API), feeds RSS dos próprios veículos e Google Notícias a partir dos veículos selecionados. Os textos pertencem aos seus respectivos autores.</footer>
+</div>
+
+<script>
+(function(){
+  const REFRESH_MS = 10 * 60 * 1000;
+  const KEY = 'diario-virtual-v1';
+  const PROXIES = [
+    u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+    u => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
+    u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u)
+  ];
+
+  const defaults = {
+    keys: {},
+    theme: 'auto',
+    voice: {uri:'', rate:1, perTopic:3},
+    syncKeys: false,
+    topics: ['Brasil', 'Economia', 'Tecnologia'],
+    outlets: [
+      {name:'G1', domain:'g1.globo.com', on:true},
+      {name:'Folha de S.Paulo', domain:'folha.uol.com.br', on:true},
+      {name:'O Estado de S. Paulo', domain:'estadao.com.br', on:true},
+      {name:'CNN Brasil', domain:'cnnbrasil.com.br', on:true},
+      {name:'BBC News Brasil', domain:'bbc.com', on:false},
+      {name:'UOL', domain:'noticias.uol.com.br', on:false}
+    ]
+  };
+
+  let state = load();
+  let nextAt = Date.now() + REFRESH_MS;
+  let busy = false;
+  let useServer = false;
+  let providers = [];      /* [{id,name,env}] vindo do servidor */
+  const lastErr = {};      /* id do provedor -> ultimo erro */
+  const skipUntil = {};    /* id do provedor -> pausa (cota) */
+  const lastUse = {};      /* id do provedor -> 'chave X de Y' */
+  let edition = 0;
+  let focus = null;                  /* interesse em foco (null = todos) */
+  const lastResults = new Map();     /* interesse -> ultimo resultado */
+  let sb = null, sbUser = null, sbConfigured = null, sbError = '';
+  let cloudMsg = '', pushTimer = null, suppressPush = false;
+  let currentReader = null;
+
+  const $ = id => document.getElementById(id);
+
+  function load(){
+    try{
+      const s = JSON.parse(localStorage.getItem(KEY));
+      if(s && Array.isArray(s.topics) && Array.isArray(s.outlets)){
+        s.keys = s.keys || {};
+        if(s.apiKey){ s.keys.currents = s.keys.currents || s.apiKey; }  /* migra a chave antiga */
+        delete s.apiKey; delete s.usage;
+        for(const k of Object.keys(s.keys)){          /* texto -> lista de chaves */
+          if(typeof s.keys[k] === 'string') s.keys[k] = s.keys[k] ? [s.keys[k]] : [];
+          else if(!Array.isArray(s.keys[k])) s.keys[k] = [];
+        }
+        return normalize(s);
+      }
+    }catch(e){}
+    return normalize(JSON.parse(JSON.stringify(defaults)));
+  }
+  function normalize(s){
+    s.theme = ['auto','light','dark'].includes(s.theme) ? s.theme : 'auto';
+    const v = (s.voice && typeof s.voice === 'object') ? s.voice : {};
+    s.voice = {
+      uri: typeof v.uri === 'string' ? v.uri : '',
+      rate: Math.min(1.6, Math.max(0.6, Number(v.rate) || 1)),
+      perTopic: Math.min(10, Math.max(1, parseInt(v.perTopic, 10) || 3))
+    };
+    s.syncKeys = !!s.syncKeys;
+    if(!s.keys || typeof s.keys !== 'object') s.keys = {};
+    return s;
+  }
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){}
+    schedulePush();
+  }
+
+  /* ---------- Tema ---------- */
+  const mqDark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  function resolvedTheme(){
+    return state.theme === 'auto' ? (mqDark && mqDark.matches ? 'dark' : 'light') : state.theme;
+  }
+  function applyTheme(){
+    const t = resolvedTheme();
+    document.documentElement.dataset.theme = t;
+    const b = $('btnTheme');
+    if(b){
+      b.innerHTML = t === 'dark' ? '<i class="fa-solid fa-sun"></i>Claro' : '<i class="fa-solid fa-moon"></i>Luz noturna';
+      b.setAttribute('aria-label', t === 'dark' ? 'Mudar para o tema claro' : 'Mudar para o tema escuro com luz noturna');
+    }
+    document.querySelectorAll('#themeBtns [data-mode]').forEach(x=>{
+      const on = x.dataset.mode === state.theme;
+      x.classList.toggle('on', on); x.setAttribute('aria-pressed', on);
+    });
+  }
+  if(mqDark && mqDark.addEventListener) mqDark.addEventListener('change', ()=>{ if(state.theme === 'auto') applyTheme(); });
+
+  /* ---------- Abas das configurações ---------- */
+  function selectTab(name){
+    document.querySelectorAll('#config .tab').forEach(t=>{
+      const on = t.dataset.tab === name;
+      t.classList.toggle('on', on); t.setAttribute('aria-selected', on);
+    });
+    document.querySelectorAll('#config .tabpanel').forEach(p=>p.classList.toggle('on', p.id === 'tab-' + name));
+  }
+
+  /* ---------- Filtro por interesse ---------- */
+  function renderFocus(){
+    if(focus && !state.topics.includes(focus)) focus = null;
+    const bar = $('focusBar'); bar.innerHTML = '';
+    if(state.topics.length < 2) return;
+    const mk = (label, val)=>{
+      const b = document.createElement('button'); b.type = 'button';
+      b.className = 'btn' + (focus === val ? ' on' : ''); b.textContent = label;
+      b.setAttribute('aria-pressed', focus === val);
+      b.onclick = ()=>{ focus = val; renderFocus(); renderPaper(); };
+      bar.appendChild(b);
+    };
+    mk('Todos os interesses', null);
+    state.topics.forEach(t=>mk(t, t));
+  }
+  function renderPaper(){
+    if(!state.topics.length) return;
+    $('paper').innerHTML = state.topics.map(t=>{
+      if(focus && focus !== t) return '';
+      const res = lastResults.get(t);
+      return res ? sectionHTML(t, res)
+        : '<section class="section"><div class="section-head"><h2>'+esc(t)+'</h2></div><div class="skeleton" style="width:70%"></div><div class="skeleton" style="width:90%"></div></section>';
+    }).join('');
+    hydrateImages();
+  }
+
+  /* ---------- Cabeçalho ---------- */
+  function setDate(){
+    const d = new Date();
+    $('dateLine').textContent = d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  }
+
+  /* ---------- Configuração ---------- */
+  function renderConfig(){
+    const tc = $('topicChips'); tc.innerHTML = '';
+    state.topics.forEach((t,i)=>{
+      const c = document.createElement('div'); c.className='chip';
+      const s = document.createElement('span'); s.textContent = t;
+      const b = document.createElement('button'); b.type='button';
+      b.setAttribute('aria-label','Remover '+t);
+      b.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+      b.onclick = ()=>{ state.topics.splice(i,1); save(); renderConfig(); fetchAll(); };
+      c.append(s,b); tc.appendChild(c);
+    });
+    const oc = $('outletChips'); oc.innerHTML = '';
+    state.outlets.forEach((o,i)=>{
+      const c = document.createElement('div'); c.className='chip'+(o.on?'':' off');
+      const s = document.createElement('span'); s.className='tg'; s.textContent=o.name; s.title=o.domain;
+      s.onclick = ()=>{ o.on=!o.on; save(); renderConfig(); fetchAll(); };
+      const b = document.createElement('button'); b.type='button';
+      b.setAttribute('aria-label','Remover '+o.name);
+      b.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+      b.onclick = ()=>{ state.outlets.splice(i,1); save(); renderConfig(); fetchAll(); };
+      c.append(s,b); oc.appendChild(c);
+    });
+    renderFocus();
+  }
+
+  function addTopic(){
+    const v = $('topicInput').value.trim();
+    if(!v) return;
+    if(!state.topics.some(t=>t.toLowerCase()===v.toLowerCase())) state.topics.push(v);
+    $('topicInput').value=''; save(); renderConfig(); fetchAll();
+  }
+  function addOutlet(){
+    const name = $('outName').value.trim();
+    let dom = $('outDomain').value.trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/\/.*$/,'');
+    if(!name || !dom) return;
+    state.outlets.push({name, domain:dom, on:true});
+    $('outName').value=''; $('outDomain').value='';
+    save(); renderConfig(); fetchAll();
+  }
+
+  /* ---------- Busca ---------- */
+  function buildUrl(topic){
+    const active = state.outlets.filter(o=>o.on);
+    let q = topic;
+    if(active.length){
+      q += ' (' + active.map(o=>'site:'+o.domain).join(' OR ') + ')';
+    }
+    q += ' when:2d';
+    return 'https://news.google.com/rss/search?q=' + encodeURIComponent(q) + '&hl=pt-BR&gl=BR&ceid=BR:pt-419';
+  }
+
+  async function detectServer(){
+    if(location.protocol === 'file:') return;
+    try{
+      const r = await fetch('/api/ping');
+      useServer = r.ok && (await r.json()).ok === true;
+    }catch(e){}
+  }
+  async function fetchText(url){
+    if(useServer){
+      const r = await fetch('/api/rss?url=' + encodeURIComponent(url));
+      if(!r.ok) throw new Error('servidor local HTTP '+r.status);
+      return await r.text();
+    }
+    const errs = [];
+    for(const p of PROXIES){
+      try{
+        const ctl = new AbortController();
+        const to = setTimeout(()=>ctl.abort(), 15000);
+        const r = await fetch(p(url), {signal:ctl.signal});
+        clearTimeout(to);
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        const t = await r.text();
+        if(t.indexOf('<rss') === -1 && t.indexOf('<item') === -1) throw new Error('Resposta inválida');
+        return t;
+      }catch(e){ errs.push(e.name==='AbortError' ? 'tempo esgotado' : e.message); }
+    }
+    throw new Error('proxies: '+errs.join(', '));
+  }
+
+  function parse(xml){
+    const doc = new DOMParser().parseFromString(xml,'text/xml');
+    const items = [...doc.querySelectorAll('item')].map(it=>{
+      const raw = (it.querySelector('title')||{}).textContent || '';
+      const srcEl = it.querySelector('source');
+      const source = srcEl ? srcEl.textContent : '';
+      let title = raw;
+      if(source && title.endsWith(' - '+source)) title = title.slice(0, -(source.length+3));
+      return {
+        title: title.trim(),
+        link: (it.querySelector('link')||{}).textContent || '#',
+        date: new Date((it.querySelector('pubDate')||{}).textContent || Date.now()),
+        source: source || 'Fonte desconhecida'
+      };
+    });
+    items.sort((a,b)=>b.date-a.date);
+    return items;
+  }
+
+  function ago(d){
+    const m = Math.max(0, Math.round((Date.now()-d)/60000));
+    if(m<1) return 'agora mesmo';
+    if(m<60) return 'há '+m+' min';
+    const h = Math.round(m/60);
+    if(h<24) return 'há '+h+' h';
+    return 'há '+Math.round(h/24)+' d';
+  }
+
+  /* ---------- APIs de notícias ---------- */
+  function host(u){ try{ return new URL(u).hostname.replace(/^www\./,''); }catch(e){ return ''; } }
+  function sourceName(h, fallback){
+    const o = state.outlets.find(o=>h === o.domain || h.endsWith('.'+o.domain));
+    return o ? o.name : (fallback || h);
+  }
+  async function loadProviders(){
+    if(!useServer) return;
+    try{
+      const r = await fetch('/api/providers');
+      if(r.ok) providers = (await r.json()).providers || [];
+    }catch(e){}
+  }
+  function keysOf(id){ return Array.isArray(state.keys[id]) ? state.keys[id] : []; }
+  function activeProviders(){
+    return useServer ? providers.filter(p => keysOf(p.id).length || p.env) : [];
+  }
+  async function fetchApi(p, topic){
+    const act = state.outlets.filter(o=>o.on);
+    const url = '/api/news?provider=' + encodeURIComponent(p.id) + '&q=' + encodeURIComponent(topic) +
+      '&domains=' + encodeURIComponent(act.map(o=>o.domain).join(','));
+    const r = await fetch(url, {headers: keysOf(p.id).length ? {'X-Api-Key': keysOf(p.id).join(',')} : {}});
+    let j = {}; try{ j = await r.json(); }catch(x){}
+    if(!r.ok){
+      const e = new Error(j.error || ('HTTP ' + r.status));
+      e.quota = r.status === 429;
+      throw e;
+    }
+    if(j.key) lastUse[p.id] = 'chave ' + j.key + ' de ' + j.keys;
+    let items = (j.items||[]).map(n=>({
+      title: n.title, link: n.link, date: new Date(n.date),
+      source: sourceName(n.domain || host(n.link), n.source), image: n.image || ''
+    }));
+    if(act.length) items = items.filter(a=>act.some(o=>{ const h = host(a.link); return h === o.domain || h.endsWith('.'+o.domain); }));
+    const seen = new Set();
+    items = items.filter(a=>{ const k=a.title.toLowerCase(); if(seen.has(k)) return false; seen.add(k); return true; });
+    items.sort((a,b)=>b.date-a.date);
+    return items;
+  }
+  async function fetchRss2Json(url){
+    const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(url));
+    if(!r.ok) throw new Error('rss2json HTTP '+r.status);
+    const j = await r.json();
+    if(j.status !== 'ok') throw new Error('rss2json: '+(j.message||'erro'));
+    const items = (j.items||[]).map(n=>{
+      let title = (n.title||'').trim(), source = '';
+      const i = title.lastIndexOf(' - ');
+      if(i > 0){ source = title.slice(i+3); title = title.slice(0,i); }
+      return {title, link:n.link||'#', date:new Date(String(n.pubDate).replace(' ','T')+'Z'), source: source||'Google Notícias'};
+    });
+    items.sort((a,b)=>b.date-a.date);
+    return items;
+  }
+  async function fetchFeeds(topic){
+    const doms = state.outlets.filter(o=>o.on).map(o=>o.domain);
+    const r = await fetch('/api/feeds?topic=' + encodeURIComponent(topic) + '&outlets=' + encodeURIComponent(doms.join(',')));
+    if(!r.ok) throw new Error('feeds HTTP '+r.status);
+    const j = await r.json();
+    return (j.items||[]).map(n=>{
+      const o = state.outlets.find(o=>o.domain === n.domain);
+      return {title:n.title, link:n.link, date:new Date(n.date), source:(o ? o.name : n.source), image:n.image||''};
+    });
+  }
+  function mergeItems(a, b){
+    const seen = new Set(), out = [];
+    for(const x of a.concat(b)){
+      const k1 = x.link, k2 = x.title.toLowerCase();
+      if(seen.has(k1) || seen.has(k2)) continue;
+      seen.add(k1); seen.add(k2); out.push(x);
+    }
+    out.sort((x,y)=>y.date-x.date);
+    return out;
+  }
+  async function getTopic(t){
+    for(const p of activeProviders()){
+      if((skipUntil[p.id] || 0) > Date.now()) continue;
+      try{
+        const it = await fetchApi(p, t);
+        lastErr[p.id] = '';
+        if(it.length) return {items: it, via: p.name};
+      }catch(e){
+        lastErr[p.id] = e.quota ? 'cota esgotada' : e.message;
+        if(e.quota) skipUntil[p.id] = Date.now() + 30*60*1000;
+      }
+    }
+    let feedItems = [];
+    if(useServer){
+      try{ feedItems = await fetchFeeds(t); }catch(e){}
+      if(feedItems.length >= 5) return {items: feedItems, via: 'feeds dos veículos'};
+    }
+    const url = buildUrl(t);
+    try{
+      const g = parse(await fetchText(url));
+      return feedItems.length
+        ? {items: mergeItems(feedItems, g), via: 'feeds dos veículos e Google Notícias'}
+        : {items: g, via: 'Google Notícias'};
+    }catch(e1){
+      try{
+        const g = await fetchRss2Json(url);
+        return feedItems.length
+          ? {items: mergeItems(feedItems, g), via: 'feeds dos veículos e Google Notícias'}
+          : {items: g, via: 'Google Notícias'};
+      }catch(e2){
+        if(feedItems.length) return {items: feedItems, via: 'feeds dos veículos'};
+        throw new Error(e1.message + ' | ' + e2.message);
+      }
+    }
+  }
+  function renderKeys(){
+    const box = $('keyList'); box.innerHTML = '';
+    if(!useServer){
+      box.innerHTML = '<div class="keyinfo">As APIs de notícias só funcionam com o servidor ativo (<code>python servidor.py</code>). Sem ele, a busca usa o Google Notícias.</div>';
+      return;
+    }
+    providers.forEach(p=>{
+      const row = document.createElement('div'); row.className = 'addrow keyrow';
+      const lab = document.createElement('label'); lab.textContent = p.name; lab.htmlFor = 'key-' + p.id;
+      const inp = document.createElement('input');
+      inp.id = 'key-' + p.id; inp.type = 'password'; inp.autocomplete = 'off';
+      inp.placeholder = 'Cole uma chave aqui'; inp.setAttribute('aria-label', 'Adicionar chave ' + p.name);
+      const add = document.createElement('button'); add.type = 'button'; add.className = 'btn';
+      add.innerHTML = '<i class="fa-solid fa-plus"></i>Adicionar chave';
+      const chips = document.createElement('div'); chips.className = 'chips'; chips.id = 'keyChips-' + p.id;
+      chips.style.cssText = 'flex:1 1 100%';
+      const st = document.createElement('div'); st.className = 'keyinfo'; st.id = 'keySt-' + p.id;
+      const doAdd = ()=>{
+        const v = inp.value.trim(); if(!v) return;
+        const list = keysOf(p.id);
+        if(!list.includes(v)) state.keys[p.id] = list.concat(v);
+        delete skipUntil[p.id]; lastErr[p.id] = '';
+        inp.value = ''; save(); renderChips(p); updateKeyInfo(); fetchAll();
+      };
+      add.onclick = doAdd;
+      inp.addEventListener('keydown', e=>{ if(e.key === 'Enter') doAdd(); });
+      row.append(lab, inp, add, chips, st);
+      box.appendChild(row);
+      renderChips(p);
+    });
+    updateKeyInfo();
+  }
+  function renderChips(p){
+    const box = $('keyChips-' + p.id); if(!box) return;
+    box.innerHTML = '';
+    keysOf(p.id).forEach((k,i)=>{
+      const c = document.createElement('div'); c.className = 'chip';
+      const s = document.createElement('span'); s.textContent = (i+1) + '. …' + k.slice(-4);
+      const b = document.createElement('button'); b.type = 'button';
+      b.setAttribute('aria-label', 'Remover chave ' + (i+1)); b.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+      b.onclick = ()=>{
+        state.keys[p.id] = keysOf(p.id).filter((_,j)=>j!==i);
+        delete skipUntil[p.id]; lastErr[p.id] = ''; delete lastUse[p.id];
+        save(); renderChips(p); updateKeyInfo(); fetchAll();
+      };
+      c.append(s, b); box.appendChild(c);
+    });
+  }
+  function updateKeyInfo(){
+    providers.forEach(p=>{
+      const el = $('keySt-' + p.id); if(!el) return;
+      const n = keysOf(p.id).length;
+      const parts = [];
+      if(n) parts.push(n + (n === 1 ? ' chave salva' : ' chaves salvas') + ' neste navegador');
+      if(p.env) parts.push(p.env + (p.env === 1 ? ' chave' : ' chaves') + ' configurada' + (p.env === 1 ? '' : 's') + ' no servidor');
+      let t = parts.length ? parts.join('; ') + '.' : 'Sem chave.';
+      if(lastUse[p.id] && !lastErr[p.id]) t += ' Em uso: ' + lastUse[p.id] + '.';
+      if(lastErr[p.id]) t += ' Último erro: ' + lastErr[p.id] + '.';
+      el.textContent = t;
+    });
+  }
+
+  /* ---------- Render ---------- */
+  function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+  function byline(a){
+    return '<div class="byline"><b>'+esc(a.source)+'</b> &mdash; '+ago(a.date)+'</div>';
+  }
+
+  const itemsByLink = new Map();
+  const metaCache = new Map();
+  function aTag(a){
+    return '<a href="'+esc(a.link)+'" data-read="'+esc(a.link)+'" target="_blank" rel="noopener">'+esc(a.title)+'</a>';
+  }
+
+  function sectionHTML(topic, res){
+    const ti = state.topics.indexOf(topic);
+    let h = '<section class="section"><div class="section-head"><h2>'+esc(topic)+'</h2><span class="tools"><small>'+
+      (res.items ? Math.min(res.items.length,15)+' matérias' : '')+'</small>'+
+      (tts.ok && res.items && res.items.length && ti >= 0
+        ? '<button class="btn mini" type="button" data-listen="'+ti+'" aria-label="Ouvir as manchetes de '+esc(topic)+'"><i class="fa-solid fa-volume-high"></i>Ouvir</button>' : '')+
+      '</span></div>';
+    if(res.error){
+      h += '<div class="errbox"><i class="fa-solid fa-triangle-exclamation"></i> Não foi possível buscar este tópico agora. Uma nova tentativa ocorre na próxima atualização.'+(location.protocol==='file:' ? '<br>O navegador bloqueia buscas feitas por arquivos abertos direto do disco. Rode <b>servidor.py</b> e abra http://localhost:8000.' : '')+'<br><small>Detalhe técnico: '+esc(res.msg||'sem detalhe')+'</small></div>';
+    }else if(!res.items.length){
+      h += '<div class="empty"><i class="fa-regular fa-face-frown"></i> Nenhuma matéria recente encontrada para os veículos ativos. Ative mais veículos ou ajuste o tópico.</div>';
+    }else{
+      const items = res.items.slice(0,15);
+      items.forEach(a=>itemsByLink.set(a.link, a));
+      const lead = items[0];
+      const side = items.slice(1,5);
+      const more = items.slice(5);
+      h += '<div class="grid"><article class="lead"><div class="fig" data-img="'+esc(lead.link)+'"></div><h3>'+aTag(lead)+'</h3>'+
+        byline(lead)+'</article><div class="rest">'+
+        side.map(a=>'<article class="item"><div class="txt"><h4>'+aTag(a)+'</h4>'+byline(a)+'</div><div class="thumb" data-img="'+esc(a.link)+'"></div></article>').join('')+
+        '</div></div>';
+      if(more.length){
+        h += '<div class="more">'+more.map(a=>'<article class="item"><h4>'+aTag(a)+'</h4>'+byline(a)+'</article>').join('')+'</div>';
+      }
+    }
+    return h + '</section>';
+  }
+
+  /* ---------- Imagens e leitor ---------- */
+  function getMeta(it, force){
+    if(!force && metaCache.has(it.link)) return metaCache.get(it.link);
+    const p = fetch('/api/article?url=' + encodeURIComponent(it.link)).then(async r=>{
+      const j = await r.json().catch(()=>({}));
+      if(!r.ok) throw new Error(j.error || ('HTTP '+r.status));
+      return j;
+    });
+    metaCache.set(it.link, p);
+    return p;
+  }
+
+  async function hydrateImages(){
+    const nodes = [...document.querySelectorAll('[data-img]')].filter(n=>!n.firstChild);
+    let i = 0;
+    async function worker(){
+      while(i < nodes.length){
+        const n = nodes[i++];
+        const it = itemsByLink.get(n.dataset.img);
+        if(!it) continue;
+        let src = it.image;
+        if(!src && useServer){ try{ src = (await getMeta(it)).image; }catch(e){} }
+        if(!src || !n.isConnected) continue;
+        const img = new Image();
+        img.alt = ''; img.referrerPolicy = 'no-referrer';
+        img.onload = ()=>{
+          if(!n.isConnected) return;
+          n.appendChild(img);
+          const art = n.closest('.item'); if(art) art.classList.add('hasimg');
+        };
+        img.src = src;
+      }
+    }
+    await Promise.all([worker(), worker(), worker()]);
+  }
+
+  function renderReader(it, m){
+    const paras = m.paragraphs || [];
+    let h = '<div class="rd-kicker">'+esc(it.source)+' &mdash; '+ago(it.date)+'</div><h1>'+esc(it.title)+'</h1>';
+    if(m.description) h += '<p class="rd-dek">'+esc(m.description)+'</p>';
+    if(m.image) h += '<figure class="rd-fig"><img src="'+esc(m.image)+'" alt="" referrerpolicy="no-referrer"></figure>';
+    h += paras.length
+      ? '<div class="rd-text">'+paras.map(p=>'<p>'+esc(p)+'</p>').join('')+'</div>'
+      : '<div class="empty">Não foi possível extrair o texto desta matéria. Use o botão "Ler no site original".</div>';
+    h += '<div class="rd-foot">Texto extraído automaticamente de '+esc(m.site || host(m.url||it.link))+'. Pode estar incompleto em sites com assinatura. Todos os direitos pertencem ao veículo.</div>';
+    return h;
+  }
+
+  async function openReader(it){
+    const rd = $('reader'), body = $('rdBody');
+    rd.hidden = false; rd.scrollTop = 0; currentReader = null;
+    document.body.style.overflow = 'hidden';
+    $('rdOrig').href = it.link;
+    const head = '<div class="rd-kicker">'+esc(it.source)+' &mdash; '+ago(it.date)+'</div><h1>'+esc(it.title)+'</h1>';
+    body.innerHTML = head + '<div class="skeleton" style="width:90%"></div><div class="skeleton" style="width:80%"></div><div class="skeleton" style="width:85%"></div>';
+    try{
+      let m;
+      try{ m = await getMeta(it); }catch(e){ m = await getMeta(it, true); }
+      if(m.url) $('rdOrig').href = m.url;
+      if(rd.hidden) return;
+      body.innerHTML = renderReader(it, m);
+      currentReader = {it, m};
+    }catch(e){
+      body.innerHTML = head + '<div class="errbox"><i class="fa-solid fa-triangle-exclamation"></i> Não foi possível abrir a matéria aqui ('+esc(e.message)+'). Use o botão "Ler no site original".</div>';
+    }
+  }
+  function closeReader(){
+    if(tts.source === 'article') stopSpeech();
+    currentReader = null;
+    $('reader').hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  function skeleton(){
+    return state.topics.map(t=>'<section class="section"><div class="section-head"><h2>'+esc(t)+'</h2></div>'+
+      '<div class="skeleton" style="width:70%"></div><div class="skeleton" style="width:90%"></div><div class="skeleton" style="width:55%"></div></section>').join('');
+  }
+
+  async function fetchAll(){
+    if(busy) return;
+    busy = true;
+    $('btnRefresh').classList.add('spin');
+    const paper = $('paper');
+    if(!state.topics.length){
+      paper.innerHTML = '<div class="empty" style="margin-top:20px"><i class="fa-solid fa-plus"></i> Adicione ao menos um tópico em "Configurações" para montar sua edição.</div>';
+      busy = false; $('btnRefresh').classList.remove('spin'); nextAt = Date.now()+REFRESH_MS; return;
+    }
+    if(!paper.children.length || paper.querySelector('.skeleton')===null && edition===0) paper.innerHTML = skeleton();
+
+    const topics = state.topics.slice();
+    const results = await Promise.all(topics.map(async t=>{
+      try{ return await getTopic(t); }
+      catch(e){ return {error:true, msg:e.message}; }
+    }));
+    const vias = [...new Set(results.filter(r=>r.via).map(r=>r.via))];
+
+    topics.forEach((t,i)=>lastResults.set(t, results[i]));
+    renderPaper();
+    edition++;
+    $('editionLine').textContent = 'Edição n.º '+edition+(vias.length ? ', via '+vias.join(' e ') : '');
+    setDate();
+    nextAt = Date.now() + REFRESH_MS;
+    busy = false;
+    $('btnRefresh').classList.remove('spin');
+    tick();
+    updateKeyInfo();
+  }
+
+  function tick(){
+    const left = Math.max(0, nextAt - Date.now());
+    const m = Math.floor(left/60000), s = Math.floor((left%60000)/1000);
+    const upd = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    $('status').innerHTML = '<i class="fa-regular fa-clock"></i>' +
+      (busy ? 'Buscando notícias...' : 'Próxima atualização em '+m+':'+String(s).padStart(2,'0'));
+  }
+
+  /* ---------- Leitura em voz alta ---------- */
+  const tts = {
+    ok: ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window),
+    voices: [], segs: [], groups: [], i: 0, sid: 0, paused: false, source: '', cur: null
+  };
+  function loadVoices(){
+    if(!tts.ok) return;
+    tts.voices = (speechSynthesis.getVoices() || []).filter(v=>/^pt/i.test(v.lang));
+    renderVoiceUI();
+  }
+  function pickVoice(){
+    return tts.voices.find(v=>v.voiceURI === state.voice.uri)
+        || tts.voices.find(v=>/^pt[-_]BR/i.test(v.lang))
+        || tts.voices[0] || null;
+  }
+  /* Divide o texto em trechos curtos: navegadores cortam falas longas */
+  function chunkText(t){
+    const out = [];
+    const sents = String(t || '').replace(/\s+/g, ' ').trim().match(/[^.!?]+[.!?]*\s*/g) || [];
+    for(let s of sents){
+      s = s.trim();
+      while(s.length > 200){
+        let cut = s.lastIndexOf(',', 200);
+        if(cut < 80) cut = s.lastIndexOf(' ', 200);
+        if(cut < 1) cut = 200;
+        out.push(s.slice(0, cut + 1).trim());
+        s = s.slice(cut + 1).trim();
+      }
+      if(s) out.push(s);
+    }
+    return out;
+  }
+  function showPlayer(on){
+    $('player').hidden = !on;
+    document.body.classList.toggle('speaking', on);
+  }
+  function updatePlayer(){
+    const seg = tts.segs[tts.i], g = seg ? tts.groups[seg.g] : null;
+    $('plText').textContent = g ? g.label : '';
+    const p = $('plPause');
+    p.innerHTML = tts.paused ? '<i class="fa-solid fa-play"></i>' : '<i class="fa-solid fa-pause"></i>';
+    p.setAttribute('aria-label', tts.paused ? 'Continuar' : 'Pausar');
+  }
+  function playFrom(delay){
+    const sid = ++tts.sid;
+    if(tts.i >= tts.segs.length){ stopSpeech(); return; }
+    const u = new SpeechSynthesisUtterance(tts.segs[tts.i].text);
+    const v = pickVoice();
+    u.lang = v ? v.lang : 'pt-BR';
+    if(v) u.voice = v;
+    u.rate = state.voice.rate;
+    u.onend = ()=>{ if(sid !== tts.sid) return; tts.i++; playFrom(0); };
+    u.onerror = e=>{
+      if(sid !== tts.sid) return;
+      if(e && (e.error === 'interrupted' || e.error === 'canceled')) return;
+      tts.i++; playFrom(0);
+    };
+    tts.cur = u;   /* mantém referência: evita coleta de lixo antes do fim da fala */
+    updatePlayer();
+    setTimeout(()=>{ if(sid === tts.sid) speechSynthesis.speak(u); }, delay);
+  }
+  function stopSpeech(){
+    tts.sid++; tts.segs = []; tts.groups = []; tts.i = 0; tts.paused = false; tts.source = ''; tts.cur = null;
+    if(tts.ok) speechSynthesis.cancel();
+    showPlayer(false);
+  }
+  function speakQueue(groups, source){
+    if(!tts.ok){ alert('Este navegador não oferece leitura em voz alta.'); return; }
+    stopSpeech();
+    tts.groups = groups; tts.source = source || '';
+    groups.forEach((g,gi)=>chunkText(g.text).forEach(t=>tts.segs.push({g:gi, text:t})));
+    if(!tts.segs.length){ stopSpeech(); return; }
+    showPlayer(true);
+    playFrom(60);
+  }
+  function togglePause(){
+    if(!tts.segs.length) return;
+    if(tts.paused){ tts.paused = false; playFrom(60); }
+    else{ tts.paused = true; tts.sid++; speechSynthesis.cancel(); updatePlayer(); }
+  }
+  function nextGroup(){
+    if(!tts.segs.length) return;
+    const g = tts.segs[tts.i].g;
+    let j = tts.i;
+    while(j < tts.segs.length && tts.segs[j].g === g) j++;
+    if(j >= tts.segs.length){ stopSpeech(); return; }
+    tts.sid++; speechSynthesis.cancel();
+    tts.i = j;
+    if(tts.paused) updatePlayer(); else playFrom(60);
+  }
+  const clean = t => String(t || '').replace(/[.!?\s]+$/, '') + '.';
+  function greeting(){ const h = new Date().getHours(); return h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite'; }
+  function speakTopic(topic){
+    const res = lastResults.get(topic);
+    const items = ((res && res.items) || []).slice(0, 10);
+    if(!items.length) return;
+    const groups = [{label: topic, text: 'Manchetes de ' + topic + '.'}];
+    items.forEach(a=>groups.push({label: topic + ': ' + a.title, text: clean(a.title)}));
+    speakQueue(groups, 'topic');
+  }
+  function speakBrief(){
+    const n = state.voice.perTopic;
+    const groups = [{label: 'Resumo das notícias', text: greeting() + '. Este é o resumo das suas notícias.'}];
+    state.topics.forEach(t=>{
+      if(focus && focus !== t) return;
+      const items = ((lastResults.get(t) || {}).items || []).slice(0, n);
+      if(!items.length) return;
+      groups.push({label: t, text: 'Em ' + t + '.'});
+      items.forEach(a=>groups.push({label: t + ': ' + a.title, text: clean(a.title)}));
+    });
+    if(groups.length === 1){ alert('As notícias ainda não carregaram. Tente de novo em instantes.'); return; }
+    speakQueue(groups, 'brief');
+  }
+  function renderVoiceUI(){
+    const sel = $('voiceSel'); if(!sel) return;
+    const note = $('voiceNote');
+    if(!tts.ok){
+      sel.innerHTML = ''; sel.disabled = true;
+      note.textContent = 'Este navegador não oferece leitura em voz alta.';
+      return;
+    }
+    sel.disabled = false; sel.innerHTML = '';
+    const def = document.createElement('option'); def.value = '';
+    def.textContent = tts.voices.length ? 'Automática (português do Brasil)' : 'Voz padrão do dispositivo';
+    sel.appendChild(def);
+    tts.voices.forEach(v=>{
+      const o = document.createElement('option'); o.value = v.voiceURI; o.textContent = v.name + ' (' + v.lang + ')';
+      sel.appendChild(o);
+    });
+    sel.value = state.voice.uri;
+    if(sel.value !== state.voice.uri) sel.value = '';
+    note.textContent = tts.voices.length ? '' :
+      'Nenhuma voz em português encontrada neste dispositivo: será usada a voz padrão. Você pode instalar vozes nas configurações de acessibilidade do sistema.';
+    $('rateRange').value = state.voice.rate;
+    $('rateVal').textContent = '(' + state.voice.rate.toFixed(1) + '×)';
+    $('perTopic').value = state.voice.perTopic;
+  }
+
+  /* ---------- Conta e nuvem (Supabase) ---------- */
+  const SB_TABLE = 'user_settings';
+  const hhmm = ()=>new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+
+  async function initCloud(){
+    if(!useServer){ renderAccount(); return; }
+    try{
+      const r = await fetch('/api/config');
+      const c = r.ok ? await r.json() : {};
+      if(!c.supabaseUrl || !c.supabaseKey){ sbConfigured = false; sbError = c.error || ''; renderAccount(); return; }
+      if(document.readyState !== 'complete') await new Promise(res=>window.addEventListener('load', res, {once:true}));
+      if(!window.supabase || !window.supabase.createClient) throw new Error('a biblioteca do Supabase não carregou');
+      sb = window.supabase.createClient(c.supabaseUrl, c.supabaseKey);
+      sbConfigured = true;
+      sb.auth.onAuthStateChange((ev, session)=>{
+        sbUser = session ? session.user : null;
+        setTimeout(renderAccount, 0);   /* nunca chamar o Supabase dentro deste callback */
+      });
+      const {data} = await sb.auth.getSession();
+      sbUser = data.session ? data.session.user : null;
+      renderAccount();
+      if(sbUser) await pullCloud();
+    }catch(e){
+      sbConfigured = false; sbError = e.message || String(e);
+      renderAccount();
+    }
+  }
+  async function pullCloud(){
+    const {data, error} = await sb.from(SB_TABLE).select('data').eq('user_id', sbUser.id).maybeSingle();
+    if(error) throw error;
+    if(data && data.data && Object.keys(data.data).length){
+      applyCloud(data.data);
+      cloudMsg = 'Dados carregados da nuvem às ' + hhmm() + '.';
+    }else{
+      await pushCloud();
+    }
+    renderAccount();
+  }
+  function applyCloud(d){
+    suppressPush = true;
+    try{
+      if(Array.isArray(d.topics)) state.topics = d.topics.filter(t=>typeof t === 'string' && t.trim()).slice(0, 30);
+      if(Array.isArray(d.outlets)) state.outlets = d.outlets
+        .filter(o=>o && typeof o.name === 'string' && typeof o.domain === 'string')
+        .map(o=>({name:o.name, domain:o.domain, on:o.on !== false})).slice(0, 60);
+      if(typeof d.theme === 'string') state.theme = d.theme;
+      if(d.voice && typeof d.voice === 'object') state.voice = Object.assign({}, state.voice, d.voice);
+      if(typeof d.syncKeys === 'boolean') state.syncKeys = d.syncKeys;
+      if(d.keys && typeof d.keys === 'object'){
+        for(const id of Object.keys(d.keys)){
+          const cloud = Array.isArray(d.keys[id]) ? d.keys[id].filter(k=>typeof k === 'string' && k) : [];
+          state.keys[id] = [...new Set(keysOf(id).concat(cloud))];
+        }
+      }
+      state = normalize(state);
+      save();
+    }finally{ suppressPush = false; }
+    applyTheme(); renderConfig(); renderKeys(); renderVoiceUI();
+    fetchAll();
+  }
+  function schedulePush(){
+    if(!sb || !sbUser || suppressPush) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(()=>{
+      pushCloud().catch(e=>{ cloudMsg = 'Erro ao sincronizar: ' + (e.message || e); renderAccount(); });
+    }, 1200);
+  }
+  async function pushCloud(){
+    if(!sb || !sbUser) return;
+    const d = {topics: state.topics, outlets: state.outlets, theme: state.theme, voice: state.voice, syncKeys: state.syncKeys};
+    if(state.syncKeys) d.keys = state.keys;   /* sem a opção ligada, as chaves nunca saem do navegador */
+    const {error} = await sb.from(SB_TABLE).upsert({user_id: sbUser.id, data: d, updated_at: new Date().toISOString()});
+    if(error) throw error;
+    cloudMsg = 'Sincronizado às ' + hhmm() + '.';
+    renderAccount();
+  }
+  function renderAccount(){
+    const box = $('accountBox'); if(!box) return;
+    const typed = ($('acEmail') || {}).value || '';
+    if(!useServer){
+      box.innerHTML = '<p class="keyinfo">A conta na nuvem só funciona com o servidor ativo (<code>python servidor.py</code>).</p>';
+      return;
+    }
+    if(sbConfigured === null){ box.innerHTML = '<p class="keyinfo">Verificando a conta...</p>'; return; }
+    if(sbConfigured === false){
+      box.innerHTML = '<h3><i class="fa-solid fa-cloud"></i> Nuvem (Supabase)</h3>' +
+        (sbError
+          ? '<p>Não foi possível iniciar o Supabase: <span id="acErr"></span></p>'
+          : '<p>Para guardar interesses, veículos e preferências na nuvem, crie um projeto no Supabase, rode o arquivo <code>supabase.sql</code> e defina <code>SUPABASE_URL</code> e <code>SUPABASE_ANON_KEY</code> (a chave pública) no servidor.</p>');
+      if($('acErr')) $('acErr').textContent = sbError;
+      return;
+    }
+    const msg = t=>{ cloudMsg = t; const m = $('acMsg'); if(m) m.textContent = t; };
+    if(!sbUser){
+      box.innerHTML = '<h3><i class="fa-solid fa-cloud"></i> Conta e nuvem</h3>' +
+        '<p>Entre para guardar interesses, veículos e preferências no Supabase e usá-los em qualquer aparelho.</p>' +
+        '<div class="addrow"><input id="acEmail" type="email" autocomplete="email" placeholder="E-mail" aria-label="E-mail">' +
+        '<input id="acPass" type="password" autocomplete="current-password" placeholder="Senha (mín. 6 caracteres)" aria-label="Senha"></div>' +
+        '<div class="btns"><button class="btn" id="acIn" type="button">Entrar</button>' +
+        '<button class="btn" id="acUp" type="button">Criar conta</button></div>' +
+        '<p class="keyinfo" id="acMsg"></p>';
+      $('acEmail').value = typed; $('acMsg').textContent = cloudMsg;
+      const cred = ()=>({email: $('acEmail').value.trim(), password: $('acPass').value});
+      $('acIn').onclick = async ()=>{
+        const c = cred(); if(!c.email || !c.password) return msg('Informe e-mail e senha.');
+        msg('Entrando...');
+        const {data, error} = await sb.auth.signInWithPassword(c);
+        if(error) return msg('Não foi possível entrar: ' + error.message);
+        sbUser = data.user; msg('');
+        try{ await pullCloud(); }catch(e){ msg('Erro: ' + (e.message || e)); }
+        renderAccount();
+      };
+      $('acUp').onclick = async ()=>{
+        const c = cred(); if(!c.email || !c.password) return msg('Informe e-mail e senha.');
+        msg('Criando conta...');
+        const {data, error} = await sb.auth.signUp(c);
+        if(error) return msg('Não foi possível criar a conta: ' + error.message);
+        if(data.session){
+          sbUser = data.user; msg('');
+          try{ await pullCloud(); }catch(e){ msg('Erro: ' + (e.message || e)); }
+          renderAccount();
+        }else msg('Conta criada. Confirme o e-mail enviado pelo Supabase e depois clique em Entrar.');
+      };
+      return;
+    }
+    box.innerHTML = '<h3><i class="fa-solid fa-cloud"></i> Conta e nuvem</h3>' +
+      '<p>Conectado como <b id="acUser"></b>. Interesses, veículos e preferências são sincronizados automaticamente.</p>' +
+      '<label class="chk"><input type="checkbox" id="acKeys"><span>Sincronizar também as chaves de API. Elas ficam guardadas na sua conta do Supabase, protegidas por login, mas em texto simples no banco.</span></label>' +
+      '<div class="btns"><button class="btn" id="acSync" type="button"><i class="fa-solid fa-rotate"></i>Sincronizar agora</button>' +
+      '<button class="btn" id="acOut" type="button"><i class="fa-solid fa-right-from-bracket"></i>Sair</button></div>' +
+      '<p class="keyinfo" id="acMsg"></p>';
+    $('acUser').textContent = sbUser.email || sbUser.id;
+    $('acMsg').textContent = cloudMsg;
+    $('acKeys').checked = state.syncKeys;
+    $('acKeys').onchange = e=>{ state.syncKeys = e.target.checked; save(); };
+    $('acSync').onclick = async ()=>{
+      msg('Sincronizando...');
+      try{ await pushCloud(); }catch(e){ msg('Erro: ' + (e.message || e)); }
+    };
+    $('acOut').onclick = async ()=>{
+      await sb.auth.signOut(); sbUser = null; cloudMsg = ''; renderAccount();
+    };
+  }
+
+  /* ---------- Eventos ---------- */
+  $('btnRefresh').onclick = ()=>{ fetchAll(); };
+  $('btnConfig').onclick = ()=>{
+    const c = $('config'); const open = c.classList.toggle('open');
+    $('btnConfig').setAttribute('aria-expanded', open);
+  };
+  $('paper').addEventListener('click', e=>{
+    const lb = e.target.closest('button[data-listen]');
+    if(lb){ const t = state.topics[+lb.dataset.listen]; if(t) speakTopic(t); return; }
+    const a = e.target.closest('a[data-read]');
+    if(!a || !useServer) return;
+    if(e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    const it = itemsByLink.get(a.dataset.read);
+    if(!it) return;
+    e.preventDefault();
+    openReader(it);
+  });
+  $('rdBack').onclick = closeReader;
+  document.addEventListener('keydown', e=>{ if(e.key === 'Escape' && !$('reader').hidden) closeReader(); });
+  $('addTopic').onclick = addTopic;
+  $('addOutlet').onclick = addOutlet;
+  $('topicInput').addEventListener('keydown', e=>{ if(e.key==='Enter') addTopic(); });
+  $('outDomain').addEventListener('keydown', e=>{ if(e.key==='Enter') addOutlet(); });
+
+  document.querySelectorAll('#config .tab').forEach(t=>{ t.onclick = ()=>selectTab(t.dataset.tab); });
+  $('btnTheme').onclick = ()=>{
+    state.theme = resolvedTheme() === 'dark' ? 'light' : 'dark';
+    save(); applyTheme();
+  };
+  document.querySelectorAll('#themeBtns [data-mode]').forEach(b=>{
+    b.onclick = ()=>{ state.theme = b.dataset.mode; save(); applyTheme(); };
+  });
+  $('btnBrief').hidden = !tts.ok;
+  $('btnBrief').onclick = ()=>{ if(tts.segs.length) stopSpeech(); else speakBrief(); };
+  $('plPause').onclick = togglePause;
+  $('plNext').onclick = nextGroup;
+  $('plStop').onclick = stopSpeech;
+  $('rdListen').hidden = !tts.ok;
+  $('rdListen').onclick = ()=>{
+    if(!currentReader) return;
+    const {it, m} = currentReader;
+    const paras = (m.paragraphs || []).slice();
+    if(!paras.length && m.description) paras.push(m.description);
+    if(!paras.length){ alert('Não há texto para ler nesta matéria.'); return; }
+    const groups = [{label: it.title, text: clean(it.title)}];
+    paras.forEach(p=>groups.push({label: it.title, text: p}));
+    speakQueue(groups, 'article');
+  };
+  $('voiceSel').onchange = e=>{ state.voice.uri = e.target.value; save(); };
+  $('rateRange').oninput = e=>{
+    state.voice.rate = parseFloat(e.target.value) || 1;
+    $('rateVal').textContent = '(' + state.voice.rate.toFixed(1) + '×)';
+    save();
+  };
+  $('perTopic').onchange = e=>{
+    state.voice.perTopic = Math.min(10, Math.max(1, parseInt(e.target.value, 10) || 3));
+    e.target.value = state.voice.perTopic; save();
+  };
+  $('testVoice').onclick = ()=>speakQueue([{label:'Teste de voz', text:'Esta é a voz do seu Diário Virtual.'}], 'test');
+
+  setInterval(()=>{
+    if(Date.now() >= nextAt) fetchAll(); else tick();
+  }, 1000);
+
+  if(location.protocol === 'file:') $('fileWarn').hidden = false;
+  setDate();
+  applyTheme();
+  renderConfig();
+  renderVoiceUI();
+  renderAccount();
+  $('paper').innerHTML = skeleton();
+  if(tts.ok){ loadVoices(); if(speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', loadVoices); }
+  detectServer().then(loadProviders).then(()=>{ renderKeys(); fetchAll(); initCloud(); });
+})();
+</script>
+</body>
+</html>
