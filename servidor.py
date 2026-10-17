@@ -35,6 +35,16 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 PORT = int(os.environ.get("PORT", "8000"))
 HERE = os.path.dirname(os.path.abspath(__file__))
 PAGE = os.path.join(HERE, "jornal-virtual.html")
+
+# Arquivos do PWA (instalavel no celular): rota -> (arquivo, content-type, cache)
+STATIC = {
+    "/manifest.webmanifest": ("manifest.webmanifest", "application/manifest+json; charset=utf-8", "no-cache"),
+    "/sw.js": ("sw.js", "text/javascript; charset=utf-8", "no-cache"),
+    "/icon-192.png": ("icon-192.png", "image/png", "public, max-age=86400"),
+    "/icon-512.png": ("icon-512.png", "image/png", "public, max-age=86400"),
+    "/icon-maskable-512.png": ("icon-maskable-512.png", "image/png", "public, max-age=86400"),
+    "/apple-touch-icon.png": ("apple-touch-icon.png", "image/png", "public, max-age=86400"),
+}
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")
 CACHE_TTL = 6 * 3600
@@ -722,11 +732,11 @@ def supabase_config():
 
 
 class Handler(BaseHTTPRequestHandler):
-    def send(self, code, body, ctype):
+    def send(self, code, body, ctype, cache="no-store"):
         self.send_response(code)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
+        self.send_header("Cache-Control", cache)
         self.end_headers()
         self.wfile.write(body)
 
@@ -740,6 +750,10 @@ class Handler(BaseHTTPRequestHandler):
             if u.path in ("/", "/index.html"):
                 with open(PAGE, "rb") as f:
                     self.send(200, f.read(), "text/html; charset=utf-8")
+            elif u.path in STATIC:
+                fname, ctype, cache = STATIC[u.path]
+                with open(os.path.join(HERE, fname), "rb") as f:
+                    self.send(200, f.read(), ctype, cache)
             elif u.path == "/api/ping":
                 self.send_json(200, {"ok": True})
             elif u.path == "/api/rss":

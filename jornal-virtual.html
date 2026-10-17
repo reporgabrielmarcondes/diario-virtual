@@ -2,9 +2,18 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" id="themeColor" content="#eeeeee">
+<meta name="application-name" content="O Diário Virtual">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Diário">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="color-scheme" content="light dark">
-<script>try{var _s=JSON.parse(localStorage.getItem("diario-virtual-v1")||"{}"),_t=_s.theme||"auto";if(_t==="auto")_t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=_t}catch(e){}</script>
+<script>try{var _s=JSON.parse(localStorage.getItem("diario-virtual-v1")||"{}"),_t=_s.theme||"auto";if(_t==="auto")_t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=_t;var _m=document.getElementById("themeColor");if(_m)_m.content=_t==="dark"?"#16130e":"#eeeeee"}catch(e){}</script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <title>O Diário Virtual</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -32,7 +41,7 @@ body{
   margin:0;background:var(--paper);color:var(--ink);
   font-family:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;line-height:1.5;
 }
-.sheet{max-width:1180px;margin:0 auto;padding:28px 28px 60px}
+.sheet{max-width:1180px;margin:0 auto;padding:calc(24px + env(safe-area-inset-top,0px)) max(28px,env(safe-area-inset-right)) 120px max(28px,env(safe-area-inset-left))}
 
 /* Cabeçalho */
 .topline{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
@@ -57,8 +66,20 @@ body{
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* Painel de configuração */
-.config{display:none;border:1px solid var(--rule);padding:18px;margin:12px 0 4px;background:var(--panel)}
-.config.open{display:block}
+.scrim{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.5);opacity:0;transition:opacity .3s;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.scrim.show{opacity:1}
+.drawer{position:fixed;top:0;right:0;bottom:0;z-index:80;width:min(100%,460px);background:var(--paper);border-left:1px solid var(--rule);
+  padding:calc(16px + env(safe-area-inset-top,0px)) 18px calc(28px + env(safe-area-inset-bottom,0px));
+  overflow-y:auto;overscroll-behavior:contain;transform:translateX(104%);visibility:hidden;
+  transition:transform .34s cubic-bezier(.4,0,.2,1),visibility 0s .34s;box-shadow:-14px 0 36px rgba(0,0,0,.22)}
+.drawer.open{transform:none;visibility:visible;transition:transform .34s cubic-bezier(.4,0,.2,1),visibility 0s}
+.drawer-head{display:flex;justify-content:space-between;align-items:center;margin:0 0 14px}
+.drawer-head h2{margin:0;font-size:1.3rem;letter-spacing:-.01em}
+body.nav-open{overflow:hidden}
+.install{display:flex;gap:12px;align-items:center;justify-content:space-between;border:1px solid var(--rule);border-radius:16px;
+  padding:12px 14px;margin:0 0 14px;background:var(--panel);font-size:.84rem}
+.install div{display:flex;flex-direction:column;gap:2px}
+.install span{color:var(--ink-soft);font-size:.78rem}
 .config h3{margin:0 0 4px;font-size:1.05rem}
 .config p{margin:0 0 10px;font-size:.78rem;color:var(--ink-soft)}
 .addrow{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
@@ -139,14 +160,15 @@ footer{margin-top:40px;border-top:3px solid var(--rule);padding-top:8px;font-siz
 @media(prefers-reduced-motion:reduce){.spin i,.skeleton{animation:none}}
 
 /* Abas de configuração */
-.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--rule);margin:-4px 0 16px}
-.tab{font:inherit;font-size:.82rem;background:transparent;color:var(--ink);border:1px solid transparent;border-bottom:0;
-  padding:7px 12px;cursor:pointer;display:inline-flex;gap:7px;align-items:center;margin-bottom:-1px}
-.tab.on{border-color:var(--rule);background:var(--paper);font-weight:700}
+.tabs{display:flex;gap:2px;overflow-x:auto;padding:4px;border:1px solid var(--rule);border-radius:999px;background:var(--panel);margin:0 0 18px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;font:inherit;font-size:.82rem;font-weight:500;background:transparent;color:var(--ink);border:0;border-radius:999px;
+  padding:9px 14px;min-height:40px;cursor:pointer;display:inline-flex;gap:7px;align-items:center;white-space:nowrap;transition:background .25s,color .25s}
+.tab.on{background:var(--ink);color:var(--paper)}
 .tab:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .tabpanel{display:none}
 .tabpanel.on{display:block}
-.tabpanel.on.cols2{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.tabpanel.on.cols2{display:grid;grid-template-columns:1fr;gap:24px}
 .config .foot{margin-top:16px;font-size:.78rem;color:var(--ink-soft);border-top:1px solid var(--hair);padding-top:10px}
 .field{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:.82rem}
 .field label{flex:0 0 130px;font-weight:bold}
@@ -158,23 +180,82 @@ footer{margin-top:40px;border-top:3px solid var(--rule);padding-top:8px;font-siz
 .mini{padding:3px 9px;font-size:.74rem}
 .section-head .tools{display:flex;align-items:baseline;gap:10px}
 /* Filtro por interesse */
-.focusbar{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;margin-top:6px;-webkit-overflow-scrolling:touch}
-.focusbar .btn{white-space:nowrap}
 /* Player de voz */
-.player{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--paper);border-top:3px solid var(--rule);
-  display:flex;align-items:center;gap:10px;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
-.player .pl-text{flex:1;min-width:0;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-body.speaking{padding-bottom:72px}
 /* Imagens no tema escuro */
 :root[data-theme="dark"] .fig img,:root[data-theme="dark"] .thumb img,:root[data-theme="dark"] .rd-fig img{filter:grayscale(1) contrast(1.05) brightness(.8)}
 :root[data-theme="dark"] .fig:hover img,:root[data-theme="dark"] .thumb:hover img,:root[data-theme="dark"] .rd-fig:hover img{filter:brightness(.92)}
+
+/* ===== Navegação: base ===== */
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn{border-radius:999px;padding:8px 16px;min-height:38px}
+.mini{padding:4px 12px;min-height:30px}
+.chip{border-radius:999px;overflow:hidden}
+.addrow input,.field select,.field input[type=number]{border-radius:10px}
+.rbtn{flex:0 0 auto;width:42px;height:42px;border-radius:50%;border:1px solid var(--rule);background:transparent;color:var(--ink);
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:.95rem;transition:background .2s,color .2s,transform .15s}
+.rbtn:hover{background:var(--ink);color:var(--paper)}
+.rbtn:active,.btn:active,.pill-btn:active,.dock-btn:active{transform:scale(.95)}
+.rbtn:focus-visible,.pill-btn:focus-visible,.dock-btn:focus-visible,.hamb:focus-visible,.tab:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+/* ===== Barra superior com menu hambúrguer ===== */
+.topbar{display:flex;align-items:center;gap:12px}
+.topbar .topline{flex:1}
+.hamb{position:relative;flex:0 0 auto;width:46px;height:46px;border-radius:50%;border:1px solid var(--rule);background:var(--paper);color:var(--ink);cursor:pointer;transition:background .2s,color .2s}
+.hamb:hover{background:var(--ink);color:var(--paper)}
+.hamb-lines{position:absolute;left:13px;top:21px;width:18px;height:2px;background:currentColor;border-radius:2px}
+.hamb-lines::before,.hamb-lines::after{content:"";position:absolute;left:0;width:18px;height:2px;background:currentColor;border-radius:2px}
+.hamb-lines::before{top:-6px}
+.hamb-lines::after{top:6px}
+.dot{position:absolute;top:5px;right:5px;width:11px;height:11px;border-radius:50%;background:#d1491f;border:2px solid var(--paper)}
+
+/* ===== Pílula de interesses (fixa ao rolar) ===== */
+.pillbar{position:sticky;top:0;z-index:30;padding:8px 0 10px;margin-top:2px;background:linear-gradient(var(--paper) 72%,transparent)}
+.pill{position:relative;display:flex;gap:2px;padding:4px;border:1px solid var(--rule);border-radius:999px;background:var(--panel);
+  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.pill::-webkit-scrollbar{display:none}
+.pill-btn{position:relative;z-index:1;flex:0 0 auto;font:inherit;font-size:.88rem;font-weight:500;border:0;background:transparent;color:var(--ink);
+  padding:9px 18px;min-height:42px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:color .25s,transform .15s}
+.pill-btn.on{color:var(--paper)}
+.pill-ind{position:absolute;z-index:0;top:4px;bottom:4px;left:0;width:0;border-radius:999px;background:var(--ink);
+  transition:transform .38s cubic-bezier(.4,0,.2,1),width .38s cubic-bezier(.4,0,.2,1)}
+#paper.enter{animation:enter .38s ease both}
+@keyframes enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ===== Dock flutuante de ações ===== */
+.dock{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;
+  display:flex;gap:2px;padding:5px;background:var(--paper);border:1px solid var(--rule);border-radius:999px;
+  box-shadow:0 10px 28px rgba(0,0,0,.2);transition:transform .3s,opacity .25s,visibility 0s}
+.dock-btn{font:inherit;font-size:.84rem;font-weight:500;display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;color:var(--ink);
+  padding:10px 18px;min-height:46px;border-radius:999px;cursor:pointer;transition:background .2s,color .2s,transform .15s}
+.dock-btn:hover{background:var(--ink);color:var(--paper)}
+body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;transition:transform .3s,opacity .25s,visibility 0s .3s}
+
+/* ===== Player de voz (substitui o dock enquanto lê) ===== */
+.player{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;
+  width:min(calc(100vw - 24px),640px);display:flex;align-items:center;gap:8px;padding:6px 8px 6px 20px;
+  background:var(--paper);border:1px solid var(--rule);border-radius:999px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
+.player .pl-text{flex:1;min-width:0;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+@media(max-width:600px){
+  .sheet{padding:calc(14px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right)) 120px max(16px,env(safe-area-inset-left))}
+  .dock-btn{padding:10px 14px}
+}
+@media(max-width:340px){.dock-btn span{display:none}.dock-btn{padding:10px 18px}}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
+}
 </style>
 </head>
 <body>
 <div class="sheet">
-  <div class="topline">
-    <span id="dateLine"></span>
-    <span id="editionLine"></span>
+  <div class="topbar">
+    <div class="topline">
+      <span id="dateLine"></span>
+      <span id="editionLine"></span>
+    </div>
+    <button class="hamb" id="btnConfig" type="button" aria-label="Abrir menu de configurações" aria-expanded="false" aria-controls="config"><span class="hamb-lines" aria-hidden="true"></span><span class="dot" id="installDot" hidden></span></button>
   </div>
 
   <header class="masthead"><h1>O Diário Virtual</h1></header>
@@ -182,22 +263,24 @@ body.speaking{padding-bottom:72px}
 
   <div class="bar">
     <div class="status" id="status"><i class="fa-regular fa-clock"></i>Carregando edição...</div>
-    <div class="btns">
-      <button class="btn" id="btnBrief" type="button"><i class="fa-solid fa-volume-high"></i>Ouvir resumo</button>
-      <button class="btn" id="btnTheme" type="button"><i class="fa-solid fa-moon"></i>Luz noturna</button>
-      <button class="btn" id="btnRefresh" type="button"><i class="fa-solid fa-rotate"></i>Atualizar agora</button>
-      <button class="btn" id="btnConfig" type="button" aria-expanded="false"><i class="fa-solid fa-gear"></i>Configurações</button>
-    </div>
   </div>
+
+  <nav class="pillbar" id="pillbar" aria-label="Filtrar por interesse" hidden><div class="pill" id="focusBar"></div></nav>
 
   <div class="errbox" id="fileWarn" hidden><i class="fa-solid fa-triangle-exclamation"></i> Você abriu este arquivo direto do disco, e o navegador bloqueia as buscas de notícias nesse modo. Rode <b>servidor.py</b> e acesse <b>http://localhost:8000</b>.</div>
 
-  <section class="config" id="config" aria-label="Configurações">
+  <div class="scrim" id="scrim" hidden></div>
+  <aside class="drawer config" id="config" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" aria-hidden="true">
+    <div class="drawer-head">
+      <h2 id="drawerTitle">Configurações</h2>
+      <button class="rbtn" id="drawerClose" type="button" aria-label="Fechar configurações"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="install" id="installBox" hidden></div>
     <div class="tabs" role="tablist" aria-label="Seções das configurações">
-      <button class="tab on" id="tabbtn-geral" role="tab" type="button" data-tab="geral" aria-selected="true" aria-controls="tab-geral"><i class="fa-solid fa-newspaper"></i>Interesses e veículos</button>
-      <button class="tab" id="tabbtn-chaves" role="tab" type="button" data-tab="chaves" aria-selected="false" aria-controls="tab-chaves"><i class="fa-solid fa-key"></i>Chaves de API</button>
-      <button class="tab" id="tabbtn-voz" role="tab" type="button" data-tab="voz" aria-selected="false" aria-controls="tab-voz"><i class="fa-solid fa-palette"></i>Voz e aparência</button>
-      <button class="tab" id="tabbtn-conta" role="tab" type="button" data-tab="conta" aria-selected="false" aria-controls="tab-conta"><i class="fa-solid fa-user"></i>Conta e nuvem</button>
+      <button class="tab on" id="tabbtn-geral" role="tab" type="button" data-tab="geral" aria-selected="true" aria-controls="tab-geral"><i class="fa-solid fa-newspaper"></i>Interesses</button>
+      <button class="tab" id="tabbtn-chaves" role="tab" type="button" data-tab="chaves" aria-selected="false" aria-controls="tab-chaves"><i class="fa-solid fa-key"></i>Chaves</button>
+      <button class="tab" id="tabbtn-voz" role="tab" type="button" data-tab="voz" aria-selected="false" aria-controls="tab-voz"><i class="fa-solid fa-palette"></i>Voz e tema</button>
+      <button class="tab" id="tabbtn-conta" role="tab" type="button" data-tab="conta" aria-selected="false" aria-controls="tab-conta"><i class="fa-solid fa-user"></i>Conta</button>
     </div>
 
     <div class="tabpanel on cols2" id="tab-geral" role="tabpanel" aria-labelledby="tabbtn-geral">
@@ -255,9 +338,7 @@ body.speaking{padding-bottom:72px}
     </div>
 
     <div class="foot"><i class="fa-solid fa-circle-info"></i> As preferências ficam salvas neste navegador e, se você entrar na aba Conta e nuvem, também no Supabase. A edição é renovada automaticamente a cada 10 minutos.</div>
-  </section>
-
-  <nav class="focusbar" id="focusBar" aria-label="Filtrar por interesse"></nav>
+  </aside>
 
   <main id="paper"></main>
 
@@ -270,12 +351,18 @@ body.speaking{padding-bottom:72px}
     <div class="reader-sheet" id="rdBody"></div>
   </div>
 
+  <div class="dock" id="dock" role="toolbar" aria-label="Ações rápidas">
+    <button class="dock-btn" id="btnBrief" type="button"><i class="fa-solid fa-headphones"></i><span>Resumo</span></button>
+    <button class="dock-btn" id="btnRefresh" type="button"><i class="fa-solid fa-rotate"></i><span>Atualizar</span></button>
+    <button class="dock-btn" id="btnTheme" type="button"><i class="fa-solid fa-moon"></i><span>Noturno</span></button>
+  </div>
+
   <div class="player" id="player" hidden role="region" aria-label="Leitura em voz alta">
     <i class="fa-solid fa-volume-high" aria-hidden="true"></i>
     <div class="pl-text" id="plText" aria-live="polite"></div>
-    <button class="btn" id="plPause" type="button" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button>
-    <button class="btn" id="plNext" type="button" aria-label="Próxima manchete"><i class="fa-solid fa-forward-step"></i></button>
-    <button class="btn" id="plStop" type="button" aria-label="Parar leitura"><i class="fa-solid fa-stop"></i></button>
+    <button class="rbtn" id="plPause" type="button" aria-label="Pausar"><i class="fa-solid fa-pause"></i></button>
+    <button class="rbtn" id="plNext" type="button" aria-label="Próxima manchete"><i class="fa-solid fa-forward-step"></i></button>
+    <button class="rbtn" id="plStop" type="button" aria-label="Parar leitura"><i class="fa-solid fa-stop"></i></button>
   </div>
 
   <footer>Notícias reunidas por APIs de notícias (NewsAPI, Currents API, GNews, NewsData.io e The News API), feeds RSS dos próprios veículos e Google Notícias a partir dos veículos selecionados. Os textos pertencem aos seus respectivos autores.</footer>
@@ -365,9 +452,11 @@ body.speaking{padding-bottom:72px}
   function applyTheme(){
     const t = resolvedTheme();
     document.documentElement.dataset.theme = t;
+    const tc = document.getElementById('themeColor');
+    if(tc) tc.content = t === 'dark' ? '#16130e' : '#eeeeee';
     const b = $('btnTheme');
     if(b){
-      b.innerHTML = t === 'dark' ? '<i class="fa-solid fa-sun"></i>Claro' : '<i class="fa-solid fa-moon"></i>Luz noturna';
+      b.innerHTML = t === 'dark' ? '<i class="fa-solid fa-sun"></i><span>Claro</span>' : '<i class="fa-solid fa-moon"></i><span>Noturno</span>';
       b.setAttribute('aria-label', t === 'dark' ? 'Mudar para o tema claro' : 'Mudar para o tema escuro com luz noturna');
     }
     document.querySelectorAll('#themeBtns [data-mode]').forEach(x=>{
@@ -386,30 +475,71 @@ body.speaking{padding-bottom:72px}
     document.querySelectorAll('#config .tabpanel').forEach(p=>p.classList.toggle('on', p.id === 'tab-' + name));
   }
 
-  /* ---------- Filtro por interesse ---------- */
+  /* ---------- Pílula de interesses ---------- */
+  let focusSig = null, rzT = null;
+  function pillInd(){
+    const bar = $('focusBar');
+    let ind = bar.querySelector('.pill-ind');
+    if(!ind){
+      ind = document.createElement('span'); ind.className = 'pill-ind'; ind.setAttribute('aria-hidden', 'true');
+      bar.appendChild(ind);
+    }
+    return ind;
+  }
+  function moveIndicator(){
+    const bar = $('focusBar'), ind = pillInd();
+    const on = bar.querySelector('.pill-btn.on');
+    if(!on || !on.offsetWidth) return;           /* oculta ou ainda sem layout */
+    const first = !ind.dataset.ready;
+    if(first) ind.style.transition = 'none';     /* 1ª posição sem animar */
+    ind.style.width = on.offsetWidth + 'px';
+    ind.style.transform = 'translateX(' + on.offsetLeft + 'px)';
+    if(first){ void ind.offsetWidth; ind.style.transition = ''; ind.dataset.ready = '1'; }
+    if(typeof bar.scrollTo === 'function'){
+      bar.scrollTo({left: Math.max(0, on.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2), behavior: 'smooth'});
+    }
+  }
   function renderFocus(){
     if(focus && !state.topics.includes(focus)) focus = null;
-    const bar = $('focusBar'); bar.innerHTML = '';
-    if(state.topics.length < 2) return;
-    const mk = (label, val)=>{
-      const b = document.createElement('button'); b.type = 'button';
-      b.className = 'btn' + (focus === val ? ' on' : ''); b.textContent = label;
-      b.setAttribute('aria-pressed', focus === val);
-      b.onclick = ()=>{ focus = val; renderFocus(); renderPaper(); };
-      bar.appendChild(b);
-    };
-    mk('Todos os interesses', null);
-    state.topics.forEach(t=>mk(t, t));
+    const bar = $('focusBar');
+    $('pillbar').hidden = state.topics.length < 2;
+    const sig = state.topics.join('\u0001');
+    if(sig !== focusSig){                         /* só reconstrói se a lista mudou: assim o indicador desliza */
+      focusSig = sig;
+      const ind = pillInd(); ind.dataset.ready = '';
+      bar.querySelectorAll('.pill-btn').forEach(b=>b.remove());
+      const mk = (label, val)=>{
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'pill-btn';
+        b.textContent = label; b.onclick = ()=>setFocus(val);
+        bar.insertBefore(b, ind);
+      };
+      mk('Todos', null);
+      state.topics.forEach(t=>mk(t, t));
+    }
+    const vals = [null].concat(state.topics);
+    bar.querySelectorAll('.pill-btn').forEach((b,i)=>{
+      const on = vals[i] === focus;
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+    });
+    requestAnimationFrame(moveIndicator);
   }
-  function renderPaper(){
+  function setFocus(v){
+    if(focus === v) return;
+    focus = v; renderFocus(); renderPaper(true);
+    const target = Math.max(0, $('paper').getBoundingClientRect().top + window.scrollY - 76);
+    if(window.scrollY > target && window.scrollTo) window.scrollTo({top: target, behavior: 'smooth'});
+  }
+  function renderPaper(animate){
     if(!state.topics.length) return;
-    $('paper').innerHTML = state.topics.map(t=>{
+    const paper = $('paper');
+    paper.innerHTML = state.topics.map(t=>{
       if(focus && focus !== t) return '';
       const res = lastResults.get(t);
       return res ? sectionHTML(t, res)
         : '<section class="section"><div class="section-head"><h2>'+esc(t)+'</h2></div><div class="skeleton" style="width:70%"></div><div class="skeleton" style="width:90%"></div></section>';
     }).join('');
     hydrateImages();
+    if(animate === true){ paper.classList.remove('enter'); void paper.offsetWidth; paper.classList.add('enter'); }
   }
 
   /* ---------- Cabeçalho ---------- */
@@ -851,7 +981,8 @@ body.speaking{padding-bottom:72px}
     const m = Math.floor(left/60000), s = Math.floor((left%60000)/1000);
     const upd = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     $('status').innerHTML = '<i class="fa-regular fa-clock"></i>' +
-      (busy ? 'Buscando notícias...' : 'Próxima atualização em '+m+':'+String(s).padStart(2,'0'));
+      (busy ? 'Buscando notícias...' : navigator.onLine === false ? 'Sem conexão · mostrando a última edição salva'
+        : 'Próxima atualização em '+m+':'+String(s).padStart(2,'0'));
   }
 
   /* ---------- Leitura em voz alta ---------- */
@@ -1138,10 +1269,68 @@ body.speaking{padding-bottom:72px}
 
   /* ---------- Eventos ---------- */
   $('btnRefresh').onclick = ()=>{ fetchAll(); };
-  $('btnConfig').onclick = ()=>{
-    const c = $('config'); const open = c.classList.toggle('open');
-    $('btnConfig').setAttribute('aria-expanded', open);
-  };
+  /* ----- Menu hambúrguer: gaveta de configurações ----- */
+  let lastFocusEl = null;
+  function openDrawer(){
+    const d = $('config'); if(d.classList.contains('open')) return;
+    lastFocusEl = document.activeElement;
+    d.classList.add('open'); d.setAttribute('aria-hidden', 'false');
+    const s = $('scrim'); s.hidden = false; requestAnimationFrame(()=>s.classList.add('show'));
+    document.body.classList.add('nav-open');
+    $('btnConfig').setAttribute('aria-expanded', 'true');
+    setTimeout(()=>$('drawerClose').focus(), 60);
+  }
+  function closeDrawer(){
+    const d = $('config'); if(!d.classList.contains('open')) return;
+    d.classList.remove('open'); d.setAttribute('aria-hidden', 'true');
+    const s = $('scrim'); s.classList.remove('show');
+    setTimeout(()=>{ if(!d.classList.contains('open')) s.hidden = true; }, 320);
+    document.body.classList.remove('nav-open');
+    $('btnConfig').setAttribute('aria-expanded', 'false');
+    const back = (lastFocusEl && lastFocusEl !== document.body && lastFocusEl.focus) ? lastFocusEl : $('btnConfig');
+    back.focus();   /* Safari não foca botões ao toque: cai no hambúrguer */
+  }
+  $('btnConfig').onclick = ()=>{ $('config').classList.contains('open') ? closeDrawer() : openDrawer(); };
+  $('drawerClose').onclick = closeDrawer;
+  $('scrim').onclick = closeDrawer;
+  document.addEventListener('keydown', e=>{        /* mantém o foco dentro da gaveta aberta */
+    if(e.key !== 'Tab' || !$('config').classList.contains('open')) return;
+    const f = [...$('config').querySelectorAll('button,input,select,a[href]')].filter(x=>!x.disabled && x.offsetParent !== null);
+    if(!f.length) return;
+    const first = f[0], last = f[f.length - 1];
+    if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  });
+
+  /* ----- Instalar como aplicativo (PWA) ----- */
+  let deferredInstall = null;
+  const isStandalone = ()=>(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  const isIOS = ()=>/iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  function renderInstall(){
+    const box = $('installBox');
+    const can = !isStandalone() && (deferredInstall || isIOS());
+    box.hidden = !can; $('installDot').hidden = !(can && deferredInstall);
+    if(!can) return;
+    if(deferredInstall){
+      box.innerHTML = '<div><b>Instale o Diário no celular</b><span>Abre em tela cheia, como um app, e mostra a última edição mesmo sem internet.</span></div>' +
+        '<button class="btn" id="installBtn" type="button"><i class="fa-solid fa-download"></i>Instalar</button>';
+      $('installBtn').onclick = async ()=>{
+        const ev = deferredInstall; deferredInstall = null;
+        ev.prompt(); renderInstall();
+        try{ await ev.userChoice; }catch(e){}
+      };
+    }else{
+      box.innerHTML = '<div><b>Instale o Diário no iPhone/iPad</b><span>Toque em <i class="fa-solid fa-arrow-up-from-bracket"></i> Compartilhar e depois em “Adicionar à Tela de Início”.</span></div>';
+    }
+  }
+  window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredInstall = e; renderInstall(); });
+  window.addEventListener('appinstalled', ()=>{ deferredInstall = null; renderInstall(); });
+  window.addEventListener('online', ()=>{ fetchAll(); });
+  window.addEventListener('resize', ()=>{ clearTimeout(rzT); rzT = setTimeout(moveIndicator, 120); });
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ pillInd().dataset.ready = ''; moveIndicator(); });
+  if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+    window.addEventListener('load', ()=>{ navigator.serviceWorker.register('/sw.js').catch(()=>{}); });
+  }
   $('paper').addEventListener('click', e=>{
     const lb = e.target.closest('button[data-listen]');
     if(lb){ const t = state.topics[+lb.dataset.listen]; if(t) speakTopic(t); return; }
@@ -1154,7 +1343,11 @@ body.speaking{padding-bottom:72px}
     openReader(it);
   });
   $('rdBack').onclick = closeReader;
-  document.addEventListener('keydown', e=>{ if(e.key === 'Escape' && !$('reader').hidden) closeReader(); });
+  document.addEventListener('keydown', e=>{
+    if(e.key !== 'Escape') return;
+    if($('config').classList.contains('open')) closeDrawer();
+    else if(!$('reader').hidden) closeReader();
+  });
   $('addTopic').onclick = addTopic;
   $('addOutlet').onclick = addOutlet;
   $('topicInput').addEventListener('keydown', e=>{ if(e.key==='Enter') addTopic(); });
@@ -1206,6 +1399,7 @@ body.speaking{padding-bottom:72px}
   renderConfig();
   renderVoiceUI();
   renderAccount();
+  renderInstall();
   $('paper').innerHTML = skeleton();
   if(tts.ok){ loadVoices(); if(speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', loadVoices); }
   detectServer().then(loadProviders).then(()=>{ renderKeys(); fetchAll(); initCloud(); });
