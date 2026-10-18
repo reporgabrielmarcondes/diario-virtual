@@ -160,11 +160,12 @@ footer{margin-top:40px;border-top:3px solid var(--rule);padding-top:8px;font-siz
 @media(prefers-reduced-motion:reduce){.spin i,.skeleton{animation:none}}
 
 /* Abas de configuração */
-.tabs{display:flex;gap:2px;overflow-x:auto;padding:4px;border:1px solid var(--rule);border-radius:999px;background:var(--panel);margin:0 0 18px;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab{flex:0 0 auto;font:inherit;font-size:.82rem;font-weight:500;background:transparent;color:var(--ink);border:0;border-radius:999px;
-  padding:9px 14px;min-height:40px;cursor:pointer;display:inline-flex;gap:7px;align-items:center;white-space:nowrap;transition:background .25s,color .25s}
+.tabs{display:flex;gap:2px;padding:4px;border:1px solid var(--rule);border-radius:999px;background:var(--panel);margin:0 0 18px}
+.tab{flex:1 1 0;min-width:0;font:inherit;font-size:.82rem;font-weight:500;background:transparent;color:var(--ink);border:0;border-radius:999px;
+  padding:9px 6px;min-height:40px;cursor:pointer;display:inline-flex;justify-content:center;align-items:center;gap:7px;white-space:nowrap;
+  transition:background .25s,color .25s}
 .tab.on{background:var(--ink);color:var(--paper)}
+@media(max-width:380px){.tab{font-size:.78rem;gap:5px}.tab i{display:none}}   /* telas estreitas: só texto, sempre cabe */
 .tab:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .tabpanel{display:none}
 .tabpanel.on{display:block}
@@ -195,8 +196,8 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .rbtn{flex:0 0 auto;width:42px;height:42px;border-radius:50%;border:1px solid var(--rule);background:transparent;color:var(--ink);
   cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:.95rem;transition:background .2s,color .2s,transform .15s}
 .rbtn:hover{background:var(--ink);color:var(--paper)}
-.rbtn:active,.btn:active,.pill-btn:active,.dock-btn:active{transform:scale(.95)}
-.rbtn:focus-visible,.pill-btn:focus-visible,.dock-btn:focus-visible,.hamb:focus-visible,.tab:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.rbtn:active,.btn:active,.dock-btn:active{transform:scale(.95)}
+.rbtn:focus-visible,.dock-btn:focus-visible,.hamb:focus-visible,.tab:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
 /* ===== Barra superior com menu hambúrguer ===== */
 .topbar{display:flex;align-items:center;gap:12px}
@@ -209,25 +210,14 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .hamb-lines::after{top:6px}
 .dot{position:absolute;top:5px;right:5px;width:11px;height:11px;border-radius:50%;background:#d1491f;border:2px solid var(--paper)}
 
-/* ===== Pílula de interesses (fixa ao rolar) ===== */
-.pillbar{position:sticky;top:0;z-index:30;padding:8px 0 10px;margin-top:2px;background:linear-gradient(var(--paper) 72%,transparent)}
-.pill{position:relative;display:flex;gap:2px;padding:4px;border:1px solid var(--rule);border-radius:999px;background:var(--panel);
-  overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.pill::-webkit-scrollbar{display:none}
-.pill-btn{position:relative;z-index:1;flex:0 0 auto;font:inherit;font-size:.88rem;font-weight:500;border:0;background:transparent;color:var(--ink);
-  padding:9px 18px;min-height:42px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:color .25s,transform .15s}
-.pill-btn.on{color:var(--paper)}
-.pill-ind{position:absolute;z-index:0;top:4px;bottom:4px;left:0;width:0;border-radius:999px;background:var(--ink);
-  transition:transform .38s cubic-bezier(.4,0,.2,1),width .38s cubic-bezier(.4,0,.2,1)}
-#paper.enter{animation:enter .38s ease both}
-@keyframes enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-
 /* ===== Dock flutuante de ações ===== */
 .dock{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;
   display:flex;gap:2px;padding:5px;background:var(--paper);border:1px solid var(--rule);border-radius:999px;
   box-shadow:0 10px 28px rgba(0,0,0,.2);transition:transform .3s,opacity .25s,visibility 0s}
-.dock-btn{font:inherit;font-size:.84rem;font-weight:500;display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;color:var(--ink);
-  padding:10px 18px;min-height:46px;border-radius:999px;cursor:pointer;transition:background .2s,color .2s,transform .15s}
+.dock-btn{font:inherit;font-size:.68rem;font-weight:500;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  border:0;background:transparent;color:var(--ink);padding:8px 10px;min-width:64px;min-height:54px;border-radius:999px;cursor:pointer;
+  transition:background .2s,color .2s,transform .15s}
+.dock-btn i{font-size:1.05rem}
 .dock-btn:hover{background:var(--ink);color:var(--paper)}
 body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;transition:transform .3s,opacity .25s,visibility 0s .3s}
 
@@ -237,11 +227,34 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
   background:var(--paper);border:1px solid var(--rule);border-radius:999px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
 .player .pl-text{flex:1;min-width:0;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
+/* ===== Tela própria: interesses e veículos ===== */
+.screen{position:fixed;inset:0;z-index:55;background:var(--paper);overflow-y:auto;overscroll-behavior:contain;
+  transform:translateX(100%);visibility:hidden;transition:transform .34s cubic-bezier(.4,0,.2,1),visibility 0s .34s}
+.screen.open{transform:none;visibility:visible;transition:transform .34s cubic-bezier(.4,0,.2,1),visibility 0s}
+.screen-bar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;background:var(--paper);border-bottom:1px solid var(--rule);
+  padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right)) 12px max(16px,env(safe-area-inset-left))}
+.screen-bar h2{margin:0;font-size:1.2rem;letter-spacing:-.01em}
+.screen-body{max-width:640px;margin:0 auto;display:grid;gap:28px;
+  padding:20px max(16px,env(safe-area-inset-right)) calc(40px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left))}
+.screen h3{margin:0 0 4px;font-size:1.05rem}
+.screen p{margin:0 0 12px;font-size:.8rem;color:var(--ink-soft)}
+.screen .chip{font-size:.9rem}
+.screen .chip span{padding:8px 4px 8px 14px}
+.screen .chip button{min-width:38px;min-height:38px}
+.suggest{margin-top:14px}
+.suggest small{display:block;margin-bottom:8px;color:var(--ink-soft);font-size:.76rem}
+.menu-item{display:flex;align-items:center;gap:14px;width:100%;text-align:left;font:inherit;color:var(--ink);background:var(--panel);
+  border:1px solid var(--rule);border-radius:16px;padding:14px 16px;margin:0 0 14px;cursor:pointer;transition:background .2s,color .2s}
+.menu-item span{flex:1;display:flex;flex-direction:column;gap:2px}
+.menu-item small{color:var(--ink-soft);font-size:.76rem}
+.menu-item:hover{background:var(--ink);color:var(--paper)}
+.menu-item:hover small{color:inherit}
+.menu-item:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
 @media(max-width:600px){
+  .addrow input,.field select,.field input[type=number]{font-size:16px}   /* evita o zoom automático do iOS ao focar */
   .sheet{padding:calc(14px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right)) 120px max(16px,env(safe-area-inset-left))}
-  .dock-btn{padding:10px 14px}
 }
-@media(max-width:340px){.dock-btn span{display:none}.dock-btn{padding:10px 18px}}
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
@@ -265,8 +278,6 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
     <div class="status" id="status"><i class="fa-regular fa-clock"></i>Carregando edição...</div>
   </div>
 
-  <nav class="pillbar" id="pillbar" aria-label="Filtrar por interesse" hidden><div class="pill" id="focusBar"></div></nav>
-
   <div class="errbox" id="fileWarn" hidden><i class="fa-solid fa-triangle-exclamation"></i> Você abriu este arquivo direto do disco, e o navegador bloqueia as buscas de notícias nesse modo. Rode <b>servidor.py</b> e acesse <b>http://localhost:8000</b>.</div>
 
   <div class="scrim" id="scrim" hidden></div>
@@ -275,37 +286,15 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
       <h2 id="drawerTitle">Configurações</h2>
       <button class="rbtn" id="drawerClose" type="button" aria-label="Fechar configurações"><i class="fa-solid fa-xmark"></i></button>
     </div>
+    <button class="menu-item" id="openInterests" type="button"><i class="fa-solid fa-tags"></i><span><b>Interesses e veículos</b><small>Escolha os assuntos e as fontes do seu jornal</small></span><i class="fa-solid fa-chevron-right"></i></button>
     <div class="install" id="installBox" hidden></div>
     <div class="tabs" role="tablist" aria-label="Seções das configurações">
-      <button class="tab on" id="tabbtn-geral" role="tab" type="button" data-tab="geral" aria-selected="true" aria-controls="tab-geral"><i class="fa-solid fa-newspaper"></i>Interesses</button>
-      <button class="tab" id="tabbtn-chaves" role="tab" type="button" data-tab="chaves" aria-selected="false" aria-controls="tab-chaves"><i class="fa-solid fa-key"></i>Chaves</button>
+      <button class="tab on" id="tabbtn-chaves" role="tab" type="button" data-tab="chaves" aria-selected="true" aria-controls="tab-chaves"><i class="fa-solid fa-key"></i>Chaves</button>
       <button class="tab" id="tabbtn-voz" role="tab" type="button" data-tab="voz" aria-selected="false" aria-controls="tab-voz"><i class="fa-solid fa-palette"></i>Voz e tema</button>
       <button class="tab" id="tabbtn-conta" role="tab" type="button" data-tab="conta" aria-selected="false" aria-controls="tab-conta"><i class="fa-solid fa-user"></i>Conta</button>
     </div>
 
-    <div class="tabpanel on cols2" id="tab-geral" role="tabpanel" aria-labelledby="tabbtn-geral">
-      <div>
-        <h3><i class="fa-solid fa-newspaper"></i> Interesses</h3>
-        <p>Cada interesse vira uma seção do jornal. Use a barra acima das matérias para ver um de cada vez.</p>
-        <div class="addrow">
-          <input id="topicInput" type="text" placeholder="Ex.: economia, inteligência artificial" aria-label="Novo interesse">
-          <button class="btn" id="addTopic" type="button"><i class="fa-solid fa-plus"></i>Adicionar</button>
-        </div>
-        <div class="chips" id="topicChips"></div>
-      </div>
-      <div>
-        <h3><i class="fa-solid fa-building-columns"></i> Veículos principais</h3>
-        <p>Clique no nome para ativar ou desativar. Sem nenhum ativo, a busca usa todas as fontes.</p>
-        <div class="addrow">
-          <input id="outName" type="text" placeholder="Nome (ex.: Valor)" aria-label="Nome do veículo">
-          <input id="outDomain" type="text" placeholder="Domínio (ex.: valor.globo.com)" aria-label="Domínio do veículo">
-          <button class="btn" id="addOutlet" type="button"><i class="fa-solid fa-plus"></i>Adicionar</button>
-        </div>
-        <div class="chips" id="outletChips"></div>
-      </div>
-    </div>
-
-    <div class="tabpanel" id="tab-chaves" role="tabpanel" aria-labelledby="tabbtn-chaves">
+    <div class="tabpanel on" id="tab-chaves" role="tabpanel" aria-labelledby="tabbtn-chaves">
       <h3><i class="fa-solid fa-key"></i> Chaves das APIs de notícias</h3>
       <p>Opcional. Cadastre quantas chaves quiser em cada API: quando uma esgota a cota (ou é recusada), a próxima assume automaticamente. Se todas falharem, a busca recorre aos feeds dos veículos e ao Google Notícias. As chaves ficam neste navegador (ou no servidor, via variável de ambiente); só vão para a nuvem se você ativar isso na aba Conta e nuvem.</p>
       <div id="keyList"></div>
@@ -340,6 +329,38 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
     <div class="foot"><i class="fa-solid fa-circle-info"></i> As preferências ficam salvas neste navegador e, se você entrar na aba Conta e nuvem, também no Supabase. A edição é renovada automaticamente a cada 10 minutos.</div>
   </aside>
 
+  <section class="screen" id="interestsScreen" role="dialog" aria-modal="true" aria-labelledby="intTitle" aria-hidden="true">
+    <div class="screen-bar">
+      <button class="rbtn" id="intBack" type="button" aria-label="Voltar ao jornal"><i class="fa-solid fa-arrow-left"></i></button>
+      <h2 id="intTitle">Interesses e veículos</h2>
+    </div>
+    <div class="screen-body">
+      <div>
+        <h3><i class="fa-solid fa-tags"></i> Seus interesses</h3>
+        <p>Cada interesse vira uma seção no jornal. Escreva qualquer assunto, pessoa ou lugar.</p>
+        <div class="addrow">
+          <input id="topicInput" type="text" placeholder="Ex.: economia, inteligência artificial" aria-label="Novo interesse" enterkeyhint="done">
+          <button class="btn" id="addTopic" type="button"><i class="fa-solid fa-plus"></i>Adicionar</button>
+        </div>
+        <div class="chips" id="topicChips"></div>
+        <div class="suggest" id="suggestWrap">
+          <small>Sugestões</small>
+          <div class="chips" id="suggestChips"></div>
+        </div>
+      </div>
+      <div>
+        <h3><i class="fa-solid fa-building-columns"></i> Veículos principais</h3>
+        <p>Toque no nome para ativar ou desativar. Sem nenhum ativo, a busca usa todas as fontes.</p>
+        <div class="addrow">
+          <input id="outName" type="text" placeholder="Nome (ex.: Valor)" aria-label="Nome do veículo">
+          <input id="outDomain" type="text" placeholder="Domínio (ex.: valor.globo.com)" aria-label="Domínio do veículo">
+          <button class="btn" id="addOutlet" type="button"><i class="fa-solid fa-plus"></i>Adicionar</button>
+        </div>
+        <div class="chips" id="outletChips"></div>
+      </div>
+    </div>
+  </section>
+
   <main id="paper"></main>
 
   <div class="reader" id="reader" hidden role="dialog" aria-modal="true" aria-label="Leitura da matéria">
@@ -353,6 +374,7 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
 
   <div class="dock" id="dock" role="toolbar" aria-label="Ações rápidas">
     <button class="dock-btn" id="btnBrief" type="button"><i class="fa-solid fa-headphones"></i><span>Resumo</span></button>
+    <button class="dock-btn" id="btnInterests" type="button" aria-haspopup="dialog"><i class="fa-solid fa-tags"></i><span>Interesses</span></button>
     <button class="dock-btn" id="btnRefresh" type="button"><i class="fa-solid fa-rotate"></i><span>Atualizar</span></button>
     <button class="dock-btn" id="btnTheme" type="button"><i class="fa-solid fa-moon"></i><span>Noturno</span></button>
   </div>
@@ -403,7 +425,6 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
   const skipUntil = {};    /* id do provedor -> pausa (cota) */
   const lastUse = {};      /* id do provedor -> 'chave X de Y' */
   let edition = 0;
-  let focus = null;                  /* interesse em foco (null = todos) */
   const lastResults = new Map();     /* interesse -> ultimo resultado */
   let sb = null, sbUser = null, sbConfigured = null, sbError = '';
   let cloudMsg = '', pushTimer = null, suppressPush = false;
@@ -475,71 +496,15 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
     document.querySelectorAll('#config .tabpanel').forEach(p=>p.classList.toggle('on', p.id === 'tab-' + name));
   }
 
-  /* ---------- Pílula de interesses ---------- */
-  let focusSig = null, rzT = null;
-  function pillInd(){
-    const bar = $('focusBar');
-    let ind = bar.querySelector('.pill-ind');
-    if(!ind){
-      ind = document.createElement('span'); ind.className = 'pill-ind'; ind.setAttribute('aria-hidden', 'true');
-      bar.appendChild(ind);
-    }
-    return ind;
-  }
-  function moveIndicator(){
-    const bar = $('focusBar'), ind = pillInd();
-    const on = bar.querySelector('.pill-btn.on');
-    if(!on || !on.offsetWidth) return;           /* oculta ou ainda sem layout */
-    const first = !ind.dataset.ready;
-    if(first) ind.style.transition = 'none';     /* 1ª posição sem animar */
-    ind.style.width = on.offsetWidth + 'px';
-    ind.style.transform = 'translateX(' + on.offsetLeft + 'px)';
-    if(first){ void ind.offsetWidth; ind.style.transition = ''; ind.dataset.ready = '1'; }
-    if(typeof bar.scrollTo === 'function'){
-      bar.scrollTo({left: Math.max(0, on.offsetLeft - (bar.clientWidth - on.offsetWidth) / 2), behavior: 'smooth'});
-    }
-  }
-  function renderFocus(){
-    if(focus && !state.topics.includes(focus)) focus = null;
-    const bar = $('focusBar');
-    $('pillbar').hidden = state.topics.length < 2;
-    const sig = state.topics.join('\u0001');
-    if(sig !== focusSig){                         /* só reconstrói se a lista mudou: assim o indicador desliza */
-      focusSig = sig;
-      const ind = pillInd(); ind.dataset.ready = '';
-      bar.querySelectorAll('.pill-btn').forEach(b=>b.remove());
-      const mk = (label, val)=>{
-        const b = document.createElement('button'); b.type = 'button'; b.className = 'pill-btn';
-        b.textContent = label; b.onclick = ()=>setFocus(val);
-        bar.insertBefore(b, ind);
-      };
-      mk('Todos', null);
-      state.topics.forEach(t=>mk(t, t));
-    }
-    const vals = [null].concat(state.topics);
-    bar.querySelectorAll('.pill-btn').forEach((b,i)=>{
-      const on = vals[i] === focus;
-      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
-    });
-    requestAnimationFrame(moveIndicator);
-  }
-  function setFocus(v){
-    if(focus === v) return;
-    focus = v; renderFocus(); renderPaper(true);
-    const target = Math.max(0, $('paper').getBoundingClientRect().top + window.scrollY - 76);
-    if(window.scrollY > target && window.scrollTo) window.scrollTo({top: target, behavior: 'smooth'});
-  }
-  function renderPaper(animate){
+  /* ---------- Seções do jornal ---------- */
+  function renderPaper(){
     if(!state.topics.length) return;
-    const paper = $('paper');
-    paper.innerHTML = state.topics.map(t=>{
-      if(focus && focus !== t) return '';
+    $('paper').innerHTML = state.topics.map(t=>{
       const res = lastResults.get(t);
       return res ? sectionHTML(t, res)
         : '<section class="section"><div class="section-head"><h2>'+esc(t)+'</h2></div><div class="skeleton" style="width:70%"></div><div class="skeleton" style="width:90%"></div></section>';
     }).join('');
     hydrateImages();
-    if(animate === true){ paper.classList.remove('enter'); void paper.offsetWidth; paper.classList.add('enter'); }
   }
 
   /* ---------- Cabeçalho ---------- */
@@ -571,14 +536,33 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
       b.onclick = ()=>{ state.outlets.splice(i,1); save(); renderConfig(); fetchAll(); };
       c.append(s,b); oc.appendChild(c);
     });
-    renderFocus();
+    renderSuggest();
   }
 
-  function addTopic(){
-    const v = $('topicInput').value.trim();
+  const SUGGEST = ['Política','Esportes','Saúde','Ciência','Cultura','Negócios','Games','Cinema','Música','Meio ambiente'];
+  function addTopicName(name){
+    const v = (name || '').trim();
     if(!v) return;
     if(!state.topics.some(t=>t.toLowerCase()===v.toLowerCase())) state.topics.push(v);
-    $('topicInput').value=''; save(); renderConfig(); fetchAll();
+    save(); renderConfig(); fetchAll();
+  }
+  function addTopic(){
+    const v = $('topicInput').value;
+    $('topicInput').value = '';
+    addTopicName(v);
+  }
+  function renderSuggest(){
+    const box = $('suggestChips'); if(!box) return;
+    box.innerHTML = '';
+    const have = state.topics.map(t=>t.toLowerCase());
+    const list = SUGGEST.filter(s=>!have.includes(s.toLowerCase()));
+    $('suggestWrap').hidden = !list.length;
+    list.forEach(s=>{
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn mini';
+      b.innerHTML = '<i class="fa-solid fa-plus"></i>'; b.append(document.createTextNode(s));
+      b.onclick = ()=>addTopicName(s);
+      box.appendChild(b);
+    });
   }
   function addOutlet(){
     const name = $('outName').value.trim();
@@ -952,7 +936,7 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
     $('btnRefresh').classList.add('spin');
     const paper = $('paper');
     if(!state.topics.length){
-      paper.innerHTML = '<div class="empty" style="margin-top:20px"><i class="fa-solid fa-plus"></i> Adicione ao menos um tópico em "Configurações" para montar sua edição.</div>';
+      paper.innerHTML = '<div class="empty" style="margin-top:20px"><i class="fa-solid fa-plus"></i> Adicione ao menos um tópico em "Interesses" para montar sua edição.</div>';
       busy = false; $('btnRefresh').classList.remove('spin'); nextAt = Date.now()+REFRESH_MS; return;
     }
     if(!paper.children.length || paper.querySelector('.skeleton')===null && edition===0) paper.innerHTML = skeleton();
@@ -1089,7 +1073,6 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
     const n = state.voice.perTopic;
     const groups = [{label: 'Resumo das notícias', text: greeting() + '. Este é o resumo das suas notícias.'}];
     state.topics.forEach(t=>{
-      if(focus && focus !== t) return;
       const items = ((lastResults.get(t) || {}).items || []).slice(0, n);
       if(!items.length) return;
       groups.push({label: t, text: 'Em ' + t + '.'});
@@ -1290,12 +1273,34 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
     const back = (lastFocusEl && lastFocusEl !== document.body && lastFocusEl.focus) ? lastFocusEl : $('btnConfig');
     back.focus();   /* Safari não foca botões ao toque: cai no hambúrguer */
   }
+  /* ----- Tela própria de interesses e veículos ----- */
+  let screenOpener = null;
+  function openInterests(){
+    const s = $('interestsScreen'); if(s.classList.contains('open')) return;
+    const a = document.activeElement;
+    screenOpener = (a && a.id === 'openInterests') ? $('btnConfig') : a;   /* veio do menu: volta ao hambúrguer */
+    if($('config').classList.contains('open')) closeDrawer();
+    s.classList.add('open'); s.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('nav-open');
+    setTimeout(()=>$('intBack').focus(), 60);
+  }
+  function closeInterests(){
+    const s = $('interestsScreen'); if(!s.classList.contains('open')) return;
+    s.classList.remove('open'); s.setAttribute('aria-hidden', 'true');
+    if(!$('config').classList.contains('open')) document.body.classList.remove('nav-open');
+    const back = (screenOpener && screenOpener !== document.body && screenOpener.focus) ? screenOpener : $('btnInterests');
+    back.focus();
+  }
+  $('btnInterests').onclick = openInterests;
+  $('openInterests').onclick = openInterests;
+  $('intBack').onclick = closeInterests;
   $('btnConfig').onclick = ()=>{ $('config').classList.contains('open') ? closeDrawer() : openDrawer(); };
   $('drawerClose').onclick = closeDrawer;
   $('scrim').onclick = closeDrawer;
   document.addEventListener('keydown', e=>{        /* mantém o foco dentro da gaveta aberta */
-    if(e.key !== 'Tab' || !$('config').classList.contains('open')) return;
-    const f = [...$('config').querySelectorAll('button,input,select,a[href]')].filter(x=>!x.disabled && x.offsetParent !== null);
+    const box = $('config').classList.contains('open') ? $('config') : $('interestsScreen').classList.contains('open') ? $('interestsScreen') : null;
+    if(e.key !== 'Tab' || !box) return;
+    const f = [...box.querySelectorAll('button,input,select,a[href]')].filter(x=>!x.disabled && x.offsetParent !== null);
     if(!f.length) return;
     const first = f[0], last = f[f.length - 1];
     if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
@@ -1326,8 +1331,6 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
   window.addEventListener('beforeinstallprompt', e=>{ e.preventDefault(); deferredInstall = e; renderInstall(); });
   window.addEventListener('appinstalled', ()=>{ deferredInstall = null; renderInstall(); });
   window.addEventListener('online', ()=>{ fetchAll(); });
-  window.addEventListener('resize', ()=>{ clearTimeout(rzT); rzT = setTimeout(moveIndicator, 120); });
-  if(document.fonts && document.fonts.ready) document.fonts.ready.then(()=>{ pillInd().dataset.ready = ''; moveIndicator(); });
   if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
     window.addEventListener('load', ()=>{ navigator.serviceWorker.register('/sw.js').catch(()=>{}); });
   }
@@ -1346,6 +1349,7 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
   document.addEventListener('keydown', e=>{
     if(e.key !== 'Escape') return;
     if($('config').classList.contains('open')) closeDrawer();
+    else if($('interestsScreen').classList.contains('open')) closeInterests();
     else if(!$('reader').hidden) closeReader();
   });
   $('addTopic').onclick = addTopic;
