@@ -219,16 +219,27 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .hamb-lines::after{top:6px}
 .dot{position:absolute;top:5px;right:5px;width:11px;height:11px;border-radius:50%;background:#d1491f;border:2px solid var(--paper)}
 
-/* ===== Dock flutuante de ações ===== */
-.dock{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:40;
-  display:flex;gap:2px;padding:5px;background:var(--paper);border:1px solid var(--rule);border-radius:999px;
-  box-shadow:0 10px 28px rgba(0,0,0,.2);transition:transform .3s,opacity .25s,visibility 0s}
+/* ===== Dock retrátil: um botão redondo que se expande em pílula ===== */
+.dock{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;
+  display:flex;align-items:center;max-width:calc(100vw - 32px);padding:4px;background:var(--paper);border:1px solid var(--rule);border-radius:999px;
+  box-shadow:0 10px 28px rgba(0,0,0,.2);transition:transform .3s,opacity .25s,visibility 0s,box-shadow .3s}
+.dock-items{display:flex;gap:2px;overflow:hidden;max-width:0;opacity:0;visibility:hidden;
+  transition:max-width .38s cubic-bezier(.4,0,.2,1),opacity .2s,visibility 0s .38s}
+.dock.open .dock-items{max-width:420px;opacity:1;visibility:visible;margin-right:4px;transition:max-width .38s cubic-bezier(.4,0,.2,1),opacity .25s .08s,visibility 0s}
+.dock-toggle{flex:0 0 auto;width:48px;height:48px;border-radius:50%;border:0;background:var(--ink);color:var(--paper);cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;font-size:1.05rem;transition:transform .25s,background .2s}
+.dock-toggle:active{transform:scale(.92)}
+.dock-toggle:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.dock-toggle i{transition:transform .3s}
+.dock.open .dock-toggle i{transform:rotate(90deg)}
+.dock:not(.open){opacity:.92}
 .dock-btn{font:inherit;font-size:.68rem;font-weight:500;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  border:0;background:transparent;color:var(--ink);padding:8px 10px;min-width:64px;min-height:54px;border-radius:999px;cursor:pointer;
+  border:0;background:transparent;color:var(--ink);padding:8px 10px;min-width:62px;min-height:48px;border-radius:999px;cursor:pointer;
   transition:background .2s,color .2s,transform .15s}
 .dock-btn i{font-size:1.05rem}
 .dock-btn:hover{background:var(--ink);color:var(--paper)}
-body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;transition:transform .3s,opacity .25s,visibility 0s .3s}
+@media(max-width:400px){.dock-btn{min-width:54px;padding:8px 6px}}
+body.speaking .dock{transform:translateY(160%);opacity:0;visibility:hidden;transition:transform .3s,opacity .25s,visibility 0s .3s}
 
 /* ===== Player de voz (substitui o dock enquanto lê) ===== */
 .player{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;
@@ -382,11 +393,14 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
     <div class="reader-sheet" id="rdBody"></div>
   </div>
 
-  <div class="dock" id="dock" role="toolbar" aria-label="Ações rápidas">
-    <button class="dock-btn" id="btnBrief" type="button"><i class="fa-solid fa-headphones"></i><span>Resumo</span></button>
-    <button class="dock-btn" id="btnInterests" type="button" aria-haspopup="dialog"><i class="fa-solid fa-tags"></i><span>Interesses</span></button>
-    <button class="dock-btn" id="btnRefresh" type="button"><i class="fa-solid fa-rotate"></i><span>Atualizar</span></button>
-    <button class="dock-btn" id="btnTheme" type="button"><i class="fa-solid fa-moon"></i><span>Noturno</span></button>
+  <div class="dock" id="dock">
+    <div class="dock-items" id="dockItems" role="toolbar" aria-label="Ações rápidas">
+      <button class="dock-btn" id="btnBrief" type="button"><i class="fa-solid fa-headphones"></i><span>Resumo</span></button>
+      <button class="dock-btn" id="btnInterests" type="button" aria-haspopup="dialog"><i class="fa-solid fa-tags"></i><span>Interesses</span></button>
+      <button class="dock-btn" id="btnRefresh" type="button"><i class="fa-solid fa-rotate"></i><span>Atualizar</span></button>
+      <button class="dock-btn" id="btnTheme" type="button"><i class="fa-solid fa-moon"></i><span>Noturno</span></button>
+    </div>
+    <button class="dock-toggle" id="dockToggle" type="button" aria-expanded="false" aria-controls="dockItems" aria-label="Abrir ações rápidas"><i class="fa-solid fa-ellipsis"></i></button>
   </div>
 
   <div class="player" id="player" hidden role="region" aria-label="Leitura em voz alta">
@@ -940,6 +954,128 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
       '<div class="skeleton" style="width:70%"></div><div class="skeleton" style="width:90%"></div><div class="skeleton" style="width:55%"></div></section>').join('');
   }
 
+  /* ---------- Classificação por assunto (evita matérias misturadas entre seções) ---------- */
+  /* Termos terminados em $ valem só como palavra inteira; os demais, como início de palavra. */
+  const CATS = {
+    economia: ['econom','dolar','euro$','bolsa','ibovespa','juros','selic','inflac','ipca','igpm','pib$','mercado financ','banco central','copom','fiscal','tribut','imposto','orcamento','divida publica','investiment','acoes$','bilho','emprego','desemprego','salario','varejo','exporta','importa','petroleo','petrobras','combustive','gasolina','diesel','receita federal','fundos$','lucro','balanco','credito','financi','tarifa','deficit','superavit','fed$','bndes','industria','agronegocio','safra','commodit','consumo','renda','arrecada','pix$','banco$','bancos$','cambio','fusao','aquisicao','dividendo','iof$','fgts','inss','aposentadoria','recuperacao judicial','falencia'],
+    tecnologia: ['tecnolog','inteligencia artificial','ia$','chatgpt','openai','gemini','anthropic','claude$','google','apple','iphone','android','microsoft','whatsapp','instagram','facebook','tiktok','youtube','aplicativo','app$','apps$','smartphone','celular','software','hardware','chip$','chips$','semicondutor','nvidia','intel$','samsung','xiaomi','startup','ciberseguranca','hacker','ciberataque','vazamento de dados','algoritmo','robo$','robos$','drone','internet','rede social','redes sociais','big tech','tesla','oculos','realidade virtual','realidade aumentada','5g$','nuvem','computador','notebook','digital','tecnico de informatica','linux','windows','amazon','meta$','x$','starlink','spacex','criptomoeda','bitcoin','blockchain','wearable','gadget','streaming de'],
+    politica: ['politic','lula','bolsonaro','congresso','senado','camara dos','deputad','senador','ministro','ministra','stf$','supremo','presidente','governo','eleic','eleitor','partido','planalto','tse$','prefeit','governador','oposicao','pec$','cpi$','mandato','candidat','trump','biden','casa branca','pl$','pt$','psdb','mdb$','centrao','impeachment','reforma','veto','vetou','medida provisoria','alcolumbre','lira$','motta','tarcisio','haddad','moraes','pgr$','lei$','projeto de lei','votacao'],
+    esportes: ['esporte','futebol','flamengo','corinthians','palmeiras','santos fc','gremio','cruzeiro','vasco','botafogo','atletico','fluminense','bahia$','campeonato','brasileirao','libertadores','copa do','sulamericana','selecao','gol$','gols$','tecnico$','olimp','atleta','tenis','formula 1','f1$','nba$','ufc$','volei','basquete','neymar','rodada','placar','jogador','jogadores','treinador','nfl$','mclaren','ferrari','verstappen','pilot','campeao','vitoria do','derrota do','empate','classificacao','paralimp','judo','natacao','surfe','maratona'],
+    saude: ['saude','doenca','vacina','hospital','sus$','anvisa','medic','cancer','virus','dengue','covid','epidemia','pandemia','tratamento','cirurgia','paciente','obesidade','diabetes','remedio','ozempic','nutri','mental','sintoma','infeccao','oms$','ministerio da saude','plano de saude','alzheimer','depressao','ansiedade','transplante','clinica'],
+    ciencia: ['cienc','pesquisa','cientista','estudo','nasa$','espaco','astronom','planeta','descoberta','fossil','universo','fisica','quimica','biolog','telescopio','asteroide','foguete','lua$','marte','galaxia','genetic','dna$','arqueolog','paleontolog','dinossauro','evolucao','laboratorio','nobel','cometa','eclipse'],
+    cultura: ['cultura','cinema','filme','serie$','series$','show$','shows$','musica','cantor','cantora','album','festival','teatro','livro','literatura','novela','ator$','atriz','oscar','netflix','artista','exposicao','museu','bbb$','famoso','celebridade','estreia','documentario','disney','hbo','grammy','rock in rio','turne','banda','diretor de cinema','bienal'],
+    games: ['game','games','jogo eletronico','jogos eletronicos','playstation','ps5$','xbox','nintendo','switch 2','steam$','esports','e-sports','gamer','fortnite','minecraft','roblox','gta$','zelda','pokemon'],
+    mundo: ['guerra','israel','gaza','hamas','hezbollah','ucrania','russia','putin','china','chines','eua$','estados unidos','otan$','onu$','ira$','iran','europa','argentina','venezuela','militar','missil','exterior','internacional','mundo','uniao europeia','reino unido','franca','alemanha','japao','india$','cessar-fogo','cessar fogo','zelensky','netanyahu','xi jinping','taiwan','coreia','cuba$','mexico','canada','refugiad','embaixad'],
+    ambiente: ['ambient','clima','climatic','desmatamento','amazonia','queimada','aquecimento global','sustentab','cop30','poluicao','carbono','enchente','seca$','ibama','preserva','biodiversidade','energia limpa','solar','eolica','inundac','tempestade','furacao','el nino'],
+  };
+  /* palavra digitada no interesse -> categoria */
+  const TOPIC_CAT = [
+    [/econom|mercado|negoci|financ|invest|dinheiro|bolsa/, 'economia'],
+    [/tecnolog|\btech\b|inteligencia artificial|\bia\b|digital|computa/, 'tecnologia'],
+    [/politic|governo|congresso|eleic/, 'politica'],
+    [/esporte|futebol|\bnba\b|\bf1\b|formula/, 'esportes'],
+    [/saude|medicin|bem.?estar/, 'saude'],
+    [/cienc|espaco|astronom/, 'ciencia'],
+    [/cultur|entretenimento|cinema|musica|filme|serie|famos|celebr/, 'cultura'],
+    [/\bgames?\b|jogos/, 'games'],
+    [/mundo|internacional|exterior/, 'mundo'],
+    [/ambient|clima|sustentab/, 'ambiente']
+  ];
+  const GENERIC_TOPICS = new Set(['brasil','geral','noticias','ultimas noticias','principais','destaques','manchetes','hoje','ultimas','em alta','ultimas noticias do brasil']);
+  const STOPW = new Set(['das','dos','para','com','que','uma','por','sobre','the','and','nas','nos','de','da','do','em']);
+  const MIN_SECTION = 4;     /* seção com menos matérias claras recebe complemento neutro */
+
+  function plain(s){ return ' ' + String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim() + ' '; }
+  function hasTerm(txt, k){
+    k = k.replace(/-/g,' ');
+    if(k.endsWith('$')) return txt.includes(' ' + k.slice(0,-1) + ' ');
+    return txt.includes(' ' + k);
+  }
+  function topicProfile(t){
+    const n = plain(t).trim();
+    const cat = (TOPIC_CAT.find(([re])=>re.test(n)) || [])[1] || null;
+    const tokens = n.split(' ').filter(w=>w.length >= 3 && !STOPW.has(w));
+    return {t, n, cat, tokens, generic: GENERIC_TOPICS.has(n) || !tokens.length};
+  }
+  function scoreItem(txt, prof){
+    if(prof.generic) return 0;
+    let sc = 0;
+    prof.tokens.forEach(w=>{ if(txt.includes(' ' + w)) sc += 4; });           /* o próprio termo do interesse */
+    if(prof.cat) CATS[prof.cat].forEach(k=>{ if(hasTerm(txt, k)) sc += k.includes(' ') ? 3 : 2; });
+    return sc;
+  }
+  function topCat(txt){
+    let best = null, bs = 0;
+    for(const c in CATS){
+      let sc = 0;
+      CATS[c].forEach(k=>{ if(hasTerm(txt, k)) sc += k.includes(' ') ? 3 : 2; });
+      if(sc > bs){ bs = sc; best = c; }
+    }
+    return bs >= 2 ? best : null;
+  }
+  /* Cada matéria vai para UMA seção: a de maior afinidade. Evita Economia dentro de Tecnologia etc. */
+  function organizeTopics(topics, results){
+    const profs = topics.map(topicProfile);
+    const specific = profs.map((p,i)=>p.generic ? -1 : i).filter(i=>i >= 0);
+    const out = topics.map(()=>({scored:[], neutral:[]}));
+    const claimed = new Set();
+    const seen = new Set();
+    results.forEach((r, oi)=>{
+      if(!r || !r.items) return;
+      r.items.forEach(a=>{
+        const key = a.link + '|' + a.title.toLowerCase();
+        const txt = plain(a.title);
+        let best = -1, bestSc = 0;
+        specific.forEach(i=>{
+          const sc = scoreItem(txt, profs[i]) + (i === oi ? 0.5 : 0);        /* empate favorece a seção de origem */
+          if(sc > bestSc){ bestSc = sc; best = i; }
+        });
+        if(best >= 0 && bestSc >= 2){
+          if(seen.has('s|'+a.link) || seen.has('s|'+a.title.toLowerCase())) return;
+          seen.add('s|'+a.link); seen.add('s|'+a.title.toLowerCase());
+          out[best].scored.push({a, sc: bestSc});
+          claimed.add(a.link); claimed.add(a.title.toLowerCase());
+        }else if(oi >= 0){
+          out[oi].neutral.push(a);
+        }
+      });
+    });
+    const used = new Set(claimed);
+    const byDate = (x,y)=>y.date - x.date;
+    /* 1) seções específicas */
+    specific.forEach(i=>{
+      const sc = out[i].scored.sort((x,y)=>(y.sc - x.sc) || (y.a.date - x.a.date)).map(x=>x.a);
+      /* as mais afins primeiro, mas a manchete de abertura é a mais recente entre as boas */
+      const head = sc.slice(0, 15).sort(byDate);
+      const list = head.concat(sc.slice(15));
+      if(list.length < MIN_SECTION){
+        out[i].neutral.sort(byDate).forEach(a=>{
+          if(list.length >= MIN_SECTION) return;
+          if(used.has(a.link) || used.has(a.title.toLowerCase())) return;
+          const tc = topCat(plain(a.title));
+          if(tc && tc !== profs[i].cat) return;       /* é de outro assunto: não complementa esta seção */
+          used.add(a.link); used.add(a.title.toLowerCase()); list.push(a);
+        });
+      }
+      out[i].final = list;
+    });
+    /* 2) seções genéricas (Brasil, Destaques...) ficam com o que nenhuma seção específica reivindicou */
+    profs.forEach((p,i)=>{
+      if(!p.generic) return;
+      const list = [];
+      out[i].neutral.sort(byDate).forEach(a=>{
+        if(used.has(a.link) || used.has(a.title.toLowerCase())) return;
+        used.add(a.link); used.add(a.title.toLowerCase()); list.push(a);
+      });
+      out[i].final = list;
+    });
+    return topics.map((t,i)=>{
+      const r = results[i] || {};
+      if(r.error) return r;
+      return {items: out[i].final || [], via: r.via};
+    });
+  }
+
   async function fetchAll(){
     if(busy) return;
     busy = true;
@@ -958,7 +1094,8 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
     }));
     const vias = [...new Set(results.filter(r=>r.via).map(r=>r.via))];
 
-    topics.forEach((t,i)=>lastResults.set(t, results[i]));
+    const organized = organizeTopics(topics, results);
+    topics.forEach((t,i)=>lastResults.set(t, organized[i]));
     renderPaper();
     edition++;
     $('editionLine').textContent = 'Edição n.º '+edition+(vias.length ? ', via '+vias.join(' e ') : '');
@@ -1344,6 +1481,30 @@ body.speaking .dock{transform:translate(-50%,160%);opacity:0;visibility:hidden;t
   if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
     window.addEventListener('load', ()=>{ navigator.serviceWorker.register('/sw.js').catch(()=>{}); });
   }
+  /* ----- Dock retrátil ----- */
+  const dock = $('dock'), dockToggle = $('dockToggle');
+  let dockY = window.scrollY;
+  function setDock(open){
+    dock.classList.toggle('open', open);
+    dockToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    dockToggle.setAttribute('aria-label', open ? 'Recolher ações rápidas' : 'Abrir ações rápidas');
+    dockToggle.firstElementChild.className = open ? 'fa-solid fa-xmark' : 'fa-solid fa-ellipsis';
+    dockY = window.scrollY;
+  }
+  dockToggle.onclick = ()=>setDock(!dock.classList.contains('open'));
+  $('dockItems').addEventListener('click', e=>{
+    if(e.target.closest('.dock-btn')) setTimeout(()=>setDock(false), 180);   /* recolhe após escolher uma ação */
+  });
+  document.addEventListener('pointerdown', e=>{
+    if(dock.classList.contains('open') && !dock.contains(e.target)) setDock(false);
+  }, true);
+  window.addEventListener('scroll', ()=>{
+    if(dock.classList.contains('open') && Math.abs(window.scrollY - dockY) > 40) setDock(false);
+  }, {passive:true});
+  document.addEventListener('keydown', e=>{
+    if(e.key === 'Escape' && dock.classList.contains('open')){ setDock(false); dockToggle.focus(); }
+  });
+
   $('paper').addEventListener('click', e=>{
     const lb = e.target.closest('button[data-listen]');
     if(lb){ const t = state.topics[+lb.dataset.listen]; if(t) speakTopic(t); return; }
