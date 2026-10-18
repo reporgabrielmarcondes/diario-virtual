@@ -307,20 +307,14 @@ body.speaking .dock{transform:translateY(160%);opacity:0;visibility:hidden;trans
       <button class="rbtn" id="drawerClose" type="button" aria-label="Fechar configurações"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <button class="menu-item" id="openInterests" type="button"><i class="fa-solid fa-tags"></i><span><b>Interesses e veículos</b><small>Escolha os assuntos e as fontes do seu jornal</small></span><i class="fa-solid fa-chevron-right"></i></button>
+    <button class="menu-item" id="openKeys" type="button"><i class="fa-solid fa-key"></i><span><b>Chaves de API</b><small>Chaves das APIs de notícias e rodízio automático</small></span><i class="fa-solid fa-chevron-right"></i></button>
     <div class="install" id="installBox" hidden></div>
     <div class="tabs" role="tablist" aria-label="Seções das configurações">
-      <button class="tab on" id="tabbtn-chaves" role="tab" type="button" data-tab="chaves" aria-selected="true" aria-controls="tab-chaves"><i class="fa-solid fa-key"></i>Chaves</button>
-      <button class="tab" id="tabbtn-voz" role="tab" type="button" data-tab="voz" aria-selected="false" aria-controls="tab-voz"><i class="fa-solid fa-palette"></i>Voz e tema</button>
+      <button class="tab on" id="tabbtn-voz" role="tab" type="button" data-tab="voz" aria-selected="true" aria-controls="tab-voz"><i class="fa-solid fa-palette"></i>Voz e tema</button>
       <button class="tab" id="tabbtn-conta" role="tab" type="button" data-tab="conta" aria-selected="false" aria-controls="tab-conta"><i class="fa-solid fa-user"></i>Conta</button>
     </div>
 
-    <div class="tabpanel on" id="tab-chaves" role="tabpanel" aria-labelledby="tabbtn-chaves">
-      <h3><i class="fa-solid fa-key"></i> Chaves das APIs de notícias</h3>
-      <p>Opcional. Cadastre quantas chaves quiser em cada API: quando uma esgota a cota (ou é recusada), a próxima assume automaticamente. Se todas falharem, a busca recorre aos feeds dos veículos e ao Google Notícias. As chaves ficam neste navegador (ou no servidor, via variável de ambiente); só vão para a nuvem se você ativar isso na aba Conta e nuvem.</p>
-      <div id="keyList"></div>
-    </div>
-
-    <div class="tabpanel cols2" id="tab-voz" role="tabpanel" aria-labelledby="tabbtn-voz">
+    <div class="tabpanel cols2 on" id="tab-voz" role="tabpanel" aria-labelledby="tabbtn-voz">
       <div>
         <h3><i class="fa-solid fa-moon"></i> Aparência</h3>
         <p>O tema escuro usa tons quentes e pouco azul, mais confortável à noite. "Automático" segue o seu aparelho.</p>
@@ -377,6 +371,20 @@ body.speaking .dock{transform:translateY(160%);opacity:0;visibility:hidden;trans
           <button class="btn" id="addOutlet" type="button"><i class="fa-solid fa-plus"></i>Adicionar</button>
         </div>
         <div class="chips" id="outletChips"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="keysScreen" role="dialog" aria-modal="true" aria-labelledby="keysTitle" aria-hidden="true">
+    <div class="screen-bar">
+      <button class="rbtn" id="keysBack" type="button" aria-label="Voltar ao jornal"><i class="fa-solid fa-arrow-left"></i></button>
+      <h2 id="keysTitle">Chaves de API</h2>
+    </div>
+    <div class="screen-body">
+      <div>
+        <h3><i class="fa-solid fa-key"></i> Chaves das APIs de notícias</h3>
+        <p>Opcional. Cadastre quantas chaves quiser em cada API: quando uma esgota a cota (ou é recusada), a próxima assume automaticamente. Se todas falharem, a busca recorre aos feeds dos veículos e ao Google Notícias. As chaves ficam neste navegador (ou no servidor, via variável de ambiente); só vão para a nuvem se você ativar isso na aba Conta e nuvem.</p>
+        <div id="keyList"></div>
       </div>
     </div>
   </section>
@@ -1441,11 +1449,31 @@ body.speaking .dock{transform:translateY(160%);opacity:0;visibility:hidden;trans
   $('btnInterests').onclick = openInterests;
   $('openInterests').onclick = openInterests;
   $('intBack').onclick = closeInterests;
+  /* ----- Tela própria de chaves de API ----- */
+  let keysOpener = null;
+  function openKeys(){
+    const sc = $('keysScreen'); if(sc.classList.contains('open')) return;
+    const a = document.activeElement;
+    keysOpener = (a && a.id === 'openKeys') ? $('btnConfig') : a;
+    if($('config').classList.contains('open')) closeDrawer();
+    sc.classList.add('open'); sc.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('nav-open');
+    setTimeout(()=>$('keysBack').focus(), 60);
+  }
+  function closeKeys(){
+    const sc = $('keysScreen'); if(!sc.classList.contains('open')) return;
+    sc.classList.remove('open'); sc.setAttribute('aria-hidden', 'true');
+    if(!$('config').classList.contains('open')) document.body.classList.remove('nav-open');
+    const back = (keysOpener && keysOpener !== document.body && keysOpener.focus) ? keysOpener : $('btnConfig');
+    back.focus();
+  }
+  $('openKeys').onclick = openKeys;
+  $('keysBack').onclick = closeKeys;
   $('btnConfig').onclick = ()=>{ $('config').classList.contains('open') ? closeDrawer() : openDrawer(); };
   $('drawerClose').onclick = closeDrawer;
   $('scrim').onclick = closeDrawer;
   document.addEventListener('keydown', e=>{        /* mantém o foco dentro da gaveta aberta */
-    const box = $('config').classList.contains('open') ? $('config') : $('interestsScreen').classList.contains('open') ? $('interestsScreen') : null;
+    const box = $('config').classList.contains('open') ? $('config') : $('keysScreen').classList.contains('open') ? $('keysScreen') : $('interestsScreen').classList.contains('open') ? $('interestsScreen') : null;
     if(e.key !== 'Tab' || !box) return;
     const f = [...box.querySelectorAll('button,input,select,a[href]')].filter(x=>!x.disabled && x.offsetParent !== null);
     if(!f.length) return;
@@ -1520,6 +1548,7 @@ body.speaking .dock{transform:translateY(160%);opacity:0;visibility:hidden;trans
   document.addEventListener('keydown', e=>{
     if(e.key !== 'Escape') return;
     if($('config').classList.contains('open')) closeDrawer();
+    else if($('keysScreen').classList.contains('open')) closeKeys();
     else if($('interestsScreen').classList.contains('open')) closeInterests();
     else if(!$('reader').hidden) closeReader();
   });
