@@ -222,7 +222,7 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 /* ===== Dock retrátil: um botão redondo que se expande em pílula ===== */
 .dock{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:40;
   display:flex;align-items:center;max-width:calc(100vw - 32px);padding:4px;background:var(--paper);border:1px solid var(--rule);border-radius:999px;
-  box-shadow:0 10px 28px rgba(0,0,0,.2);transition:transform .3s,opacity .3s,padding .3s,visibility 0s,box-shadow .3s}
+  box-shadow:0 10px 28px rgba(0,0,0,.2);transition:transform .3s,opacity .3s,padding .3s,background .3s,border-color .3s,visibility 0s,box-shadow .3s}
 .dock-items{display:flex;gap:2px;overflow:hidden;max-width:0;opacity:0;visibility:hidden;
   transition:max-width .38s cubic-bezier(.4,0,.2,1),opacity .2s,visibility 0s .38s}
 .dock.open .dock-items{max-width:420px;opacity:1;visibility:visible;margin-right:4px;transition:max-width .38s cubic-bezier(.4,0,.2,1),opacity .25s .08s,visibility 0s}
@@ -233,7 +233,8 @@ button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .dock-toggle:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .dock-toggle i{transition:transform .3s}
 .dock.open .dock-toggle i{transform:rotate(90deg)}
-.dock:not(.open){opacity:.45;padding:3px;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.dock:not(.open){opacity:.45;padding:0;background:transparent;border-color:transparent;box-shadow:none}
+.dock:not(.open) .dock-toggle{box-shadow:0 3px 10px rgba(0,0,0,.22)}
 .dock:not(.open):active,.dock:not(.open):focus-within{opacity:1}
 .dock-btn{font:inherit;font-size:.68rem;font-weight:500;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
   border:0;background:transparent;color:var(--ink);padding:8px 10px;min-width:62px;min-height:48px;border-radius:999px;cursor:pointer;
